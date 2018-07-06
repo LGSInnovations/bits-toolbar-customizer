@@ -1,0 +1,21 @@
+{
+    "name": "bits-toolbar-customizer",
+    "version": "0.0.0",
+    "description": "Contribute toolbar widgets and hide existing ones",
+    "main": "index.js",
+    "scripts": {
+        "test": "mocha",
+        "lint": "eslint --fix --ext js,html .",
+        "build": "yarn && npm run lint && npm run test"
+    },
+    "module-dependencies": {
+        "bits-base": "^2.4.0"
+    },
+    "devDependencies": {
+        "eslint": "^4.4.1",
+        "eslint-plugin-html": "^3.2.0",
+        "eslint-config-google": "^0.9.1",
+        "mocha": "^3.2.0",
+        "chai": "^3.5.0"
+    }
+}

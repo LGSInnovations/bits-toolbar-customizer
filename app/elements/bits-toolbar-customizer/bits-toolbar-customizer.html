@@ -1,0 +1,81 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../base-message-center/base-message-center.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+
+<dom-module id="bits-toolbar-customizer">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      .content {
+        margin-left: 0px;
+        max-width: 480px;
+      }
+
+    </style>
+
+    <paper-icon-button
+      id="icon"
+      icon="device:signal-wifi-0-bar"
+      title="Customized Button">
+    </paper-icon-button>
+
+
+  </template>
+  <script>
+  (() => {
+    'use strict';
+
+    const BreakException = {};
+
+    Polymer({
+
+      is: 'bits-toolbar-customizer',
+
+      properties: {
+      },
+
+      ready: function() {
+        console.log('Custom toolbar');
+        const gallery = this._deepElementSearchById(this.ownerDocument, 'gallery', (node) => {
+          node.style.display = 'none';
+        });
+      },
+
+      _deepElementSearchById(parent, id, cb) {
+        try {
+          if (parent.id == id) {
+            cb(parent);
+            throw BreakException;
+          }
+          parent.childNodes.forEach( (node) => {
+            if (node.id == id) {
+              cb(node)
+              throw BreakException;
+            } else {
+              this._deepElementSearchById(node, id, cb);
+            }
+          });
+          if (parent.shadowRoot) {
+            parent.shadowRoot.childNodes.forEach( (node) => {
+              if (node.id == id) {
+                cb(node);
+                throw BreakException;
+              } else {
+                this._deepElementSearchById(node, id, cb);
+              }
+            });
+          }
+        } catch (e) {
+          if (e !== BreakException) throw e;
+        }
+      },
+    });
+
+  })();
+  </script>
+</dom-module>

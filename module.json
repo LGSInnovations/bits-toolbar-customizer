@@ -1,0 +1,17 @@
+{
+    "version": "",
+    "name": "bits-toolbar-customizer",
+    "dependencies": {
+        "bits-base": "^2.0.0"
+    },
+    "appDir": "app/",
+    "scopes": [
+        {
+            "name": "public",
+            "displayName": "Public"
+        }
+    ],
+    "displayName": "Toolbar Customizer",
+    "icon": "icons:favorite",
+    "category": "Other"
+}
