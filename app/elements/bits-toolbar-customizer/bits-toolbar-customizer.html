@@ -3,6 +3,7 @@
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
 
 <dom-module id="bits-toolbar-customizer">
   <template>
@@ -20,7 +21,7 @@
 
     <paper-icon-button
       id="icon"
-      icon="device:signal-wifi-0-bar"
+      icon="icons:grade"
       title="Customized Button">
     </paper-icon-button>
 
@@ -37,43 +38,130 @@
       is: 'bits-toolbar-customizer',
 
       properties: {
+        count: {
+          type: Number,
+          value: 0
+        },
+        matches: {
+          type: Number,
+          value: 0
+        }
       },
 
       ready: function() {
-        console.log('Custom toolbar');
-        const gallery = this._deepElementSearchById(this.ownerDocument, 'gallery', (node) => {
-          node.style.display = 'none';
-        });
+        // It turns out, the element is not really ready when ready is called
+        const poll = setInterval( () => {
+          if (this.parentElement) {
+            clearTimeout(poll);
+            const toolbar = this._findToolbar(this.parentElement);
+            toolbar && this._deepSearch(toolbar, [
+              [
+                ['id', 'menu'],
+                ['parentNode.host.tagName', 'base-system-power-control']
+              ],
+              [
+                ['id', 'gallery'],
+                ['tagName', 'paper-icon-button']
+              ],
+              [
+                ['tagName', 'paper-item'],
+                ['textContent', 'Power off']
+              ],
+              [
+                ['tagName', 'paper-item'],
+                ['textContent', 'Reboot']
+              ]
+            ],
+            (node) => {
+              node.style.display = 'none';
+              console.log(`hide ${node.id} after ${this.count} recursive searches`);
+            });
+          }
+        }, 100)
       },
 
-      _deepElementSearchById(parent, id, cb) {
+      _findToolbar(parent) {
+        while(parent !== null && String(parent.localName).toLowerCase() !== 'base-toolbar') {
+          if(parent.parentElement === null) {
+            if(parent.shadowRoot.host) {
+              parent = parent.shadowRoot.host.parentNode.host;
+            } else {
+              parent = null;
+            }
+          } else {
+            parent = parent.parentElement;
+          }
+        }
+        return parent;
+      },
+
+      _deepSearch(parent, query, cb) {
         try {
-          if (parent.id == id) {
+          this.count++;
+          if (this._match(parent, query)) {
             cb(parent);
-            throw BreakException;
+            if (++this.matches >= query.length) {
+              throw BreakException;
+            }
           }
           parent.childNodes.forEach( (node) => {
-            if (node.id == id) {
+            if (this._match(node, query)) {
               cb(node)
-              throw BreakException;
+              if (++this.matches >= query.length) {
+                throw BreakException;
+              }
             } else {
-              this._deepElementSearchById(node, id, cb);
+              this._deepSearch(node, query, cb);
             }
           });
           if (parent.shadowRoot) {
             parent.shadowRoot.childNodes.forEach( (node) => {
-              if (node.id == id) {
+              if (this._match(node, query)) {
                 cb(node);
-                throw BreakException;
+                if (++this.matches >= query.length) {
+                  throw BreakException;
+                }
               } else {
-                this._deepElementSearchById(node, id, cb);
+                this._deepSearch(node, query, cb);
               }
             });
           }
         } catch (e) {
-          if (e !== BreakException) throw e;
+          if (e != BreakException) {
+            throw e;
+          }
         }
       },
+
+      _match(node, query) {
+        let found = true;
+        try {
+          query.forEach( (q) => {
+            found = true;
+            q.forEach( (kv) => {
+              try {
+                let obj = this._getNestedObject(node, kv[0]);
+                if (typeof obj != 'string' || obj.length == 0 || obj.toLowerCase() != String(kv[1]).toLowerCase()) {
+                    found = false;
+                }
+              } catch (e) {
+                found = false;
+              }
+            });
+            if (found) {
+              throw BreakException;
+            }
+          });
+        } catch (e) {
+          // PASS
+        }
+        return found;
+      },
+
+      _getNestedObject (object, path) {
+        if (path.indexOf('.') < 0) return object[path];
+        return path.split('.').reduce( (accum, value) => accum[value], object);
+      }
     });
 
   })();
