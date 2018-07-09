@@ -19,12 +19,12 @@
 
     </style>
 
+    <!-- Sample button. Place desired buttons here, with attached listeners -->
     <paper-icon-button
       id="icon"
       icon="icons:grade"
       title="Customized Button">
     </paper-icon-button>
-
 
   </template>
   <script>
@@ -54,7 +54,11 @@
           if (this.parentElement) {
             clearTimeout(poll);
             const toolbar = this._findToolbar(this.parentElement);
-            toolbar && this._deepSearch(toolbar, [
+            console.log(toolbar);
+            toolbar && this._deepSearch(this.ownerDocument, [
+              [
+                ['tagName', 'base-home']
+              ],
               [
                 ['id', 'menu'],
                 ['parentNode.host.tagName', 'base-system-power-control']
@@ -73,8 +77,20 @@
               ]
             ],
             (node) => {
-              node.style.display = 'none';
-              console.log(`hide ${node.id} after ${this.count} recursive searches`);
+              if (node.tagName.toLowerCase() === 'base-home') {
+                this._deepSearch(this.ownerDocument, [
+                  [
+                    ['textContent', 'Activity']
+                  ]
+                ],
+                (node) => {
+                  node.parentNode.style.display = 'none';
+                  console.log(`hide ${node.parentNode.id} after ${this.count} recursive searches`);
+                });
+              } else {
+                node.style.display = 'none';
+                console.log(`hide ${node.id} after ${this.count} recursive searches`);
+              }
             });
           }
         }, 100)
@@ -134,14 +150,14 @@
       },
 
       _match(node, query) {
-        let found = true;
+        let found;
         try {
           query.forEach( (q) => {
             found = true;
             q.forEach( (kv) => {
               try {
                 let obj = this._getNestedObject(node, kv[0]);
-                if (typeof obj != 'string' || obj.length == 0 || obj.toLowerCase() != String(kv[1]).toLowerCase()) {
+                if (typeof obj != 'string' || obj.length == 0 || obj.toLowerCase() !== String(kv[1]).toLowerCase()) {
                     found = false;
                 }
               } catch (e) {
@@ -159,7 +175,6 @@
       },
 
       _getNestedObject (object, path) {
-        if (path.indexOf('.') < 0) return object[path];
         return path.split('.').reduce( (accum, value) => accum[value], object);
       }
     });
