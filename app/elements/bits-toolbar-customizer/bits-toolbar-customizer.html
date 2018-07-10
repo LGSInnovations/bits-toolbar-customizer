@@ -53,20 +53,60 @@
         const poll = setInterval( () => {
           if (this.parentElement) {
             clearTimeout(poll);
+            this._deepSearch(this.ownerDocument, [
+              /* The Home sidebar. Defined in base-home.html */
+              // [
+              //   ['tagName', 'base-home']
+              //
+              // ],
+              // [
+              //   // The Home link in the gallery. Added in base-gallery.html
+              //   ['textContent', 'Home'],
+              //   ['parentNode.parentNode.host.tagName', 'base-gallery-category']
+              // ]
+            ],
+            (node) => {
+              /* Hide entire sidebar. We hode the sidebar itself (tagname = 'base-home')
+                 and the category item 'Home' that appears in the gallery. */
+              if (node.tagName && node.tagName.toLowerCase() === 'base-home') {
+                node.style.display = 'none';
+              } else {
+                node.parentNode.parentNode.host.style.display = 'none';
+              }
+
+              /* Alternatively, hide some items in the sidebar. Do this in place of the code above.
+                 However, this has a flaw. The hidden items will be hidden if you navigate directly
+                 to /home, but they'll still apear after clicking the "Home" link inthe gallery.
+                 Refreshing the page at that point will hide them. */
+              // this._deepSearch(node, [
+              //   /* Activity entry in Home menu. See   _computeSideBar(user) in base-home.html.
+              //    * Other items from the home menu also defined there. */
+              //   [
+              //     ['textContent', 'Activity']
+              //   ]
+              // ],
+              // (node) => {
+              //   node.parentNode.style.display = 'none';
+              //   console.log(`hide ${node.parentNode.id} after ${this.count} recursive searches`);
+              // });
+            });
             const toolbar = this._findToolbar(this.parentElement);
-            console.log(toolbar);
-            toolbar && this._deepSearch(this.ownerDocument, [
-              [
-                ['tagName', 'base-home']
-              ],
+            toolbar && this._deepSearch(toolbar, [
+              // Power menu, defined in 'base-system-power-control.html'
               [
                 ['id', 'menu'],
                 ['parentNode.host.tagName', 'base-system-power-control']
               ],
+              // BITS label in toolbar, defined in base-toolbar.html
               [
-                ['id', 'gallery'],
-                ['tagName', 'paper-icon-button']
+                ['textContent', 'BITS'],
+                ['parentNode.parentNode.tagName', 'app-toolbar']
               ],
+              // [
+              //   ['id', 'gallery'],
+              //   ['tagName', 'paper-icon-button']
+              // ],
+              // Power menu items, defined in 'base-system-power-control.html'
               [
                 ['tagName', 'paper-item'],
                 ['textContent', 'Power off']
@@ -77,20 +117,9 @@
               ]
             ],
             (node) => {
-              if (node.tagName.toLowerCase() === 'base-home') {
-                this._deepSearch(this.ownerDocument, [
-                  [
-                    ['textContent', 'Activity']
-                  ]
-                ],
-                (node) => {
-                  node.parentNode.style.display = 'none';
-                  console.log(`hide ${node.parentNode.id} after ${this.count} recursive searches`);
-                });
-              } else {
-                node.style.display = 'none';
-                console.log(`hide ${node.id} after ${this.count} recursive searches`);
-              }
+              node.style.display = 'none';
+              console.log(`hide ${node.id} after ${this.count} recursive searches`);
+
             });
           }
         }, 100)

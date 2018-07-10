@@ -1,0 +1,28 @@
+{
+  "name": "bits-toolbar-customizer",
+  "homepage": "https://github.com/LGSInnovations/bits-toolbar-customizer",
+  "authors": [
+    "Axios"
+  ],
+  "description": "Contribute new Bits toolbar items and hide existing ones",
+  "main": "",
+  "keywords": [
+    "bits",
+    "toolbar"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "app-layout": "^2.1.1",
+    "paper-tabs": "^2.1.1",
+    "iron-flex-layout": "^2.0.3",
+    "paper-checkbox": "^2.0.4",
+    "paper-button": "^2.1.1"
+  }
+}

@@ -1,0 +1,233 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../base-message-center/base-message-center.html">
+<link rel="import" href="../../bower_components/app-layout/app-layout.html">
+<link rel="import" href="../../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+
+<dom-module id="bits-toolbar-customizer-app">
+  <template>
+    <style include="iron-flex iron-flex-alignment">
+      :host {
+        display: block;
+        width: 100vw;
+        overflow-x: auto;
+      }
+
+      .button-container {
+        width: 60%
+      }
+
+      app-toolbar {
+        background-color: #4285f4;
+        color: #fff;
+        margin: 10px 5% 0;
+        width: 90%;
+      }
+
+      paper-checkbox.spacer {
+        margin: 0 5px;
+      }
+
+      paper-checkbox.blue {
+        align-self: center;
+        border: 2px solid #1e88e5;
+        padding: 8px 16px;
+        border-radius: 13px;
+
+        --paper-checkbox-checked-color: #04d7a1;
+        --paper-checkbox-checked-ink-color: #04d7a1;
+        --paper-checkbox-unchecked-color: #003399;
+        --paper-checkbox-unchecked-ink-color: #003399;
+        --paper-checkbox-label-color: #003399;
+        --paper-checkbox-label-spacing: 0;
+        --paper-checkbox-margin: 8px 16px 8px 0;
+        --paper-checkbox-vertical-align: top;
+        --paper-checkbox-label-checked-color: #ff0000;
+      }
+
+      paper-button.custom {
+        --paper-button-ink-color: var(--paper-red-a200);
+        --paper-button-flat-keyboard-focus: {
+          background-color: var(--paper-blue-500);
+          color: white !important;
+        };
+        --paper-button-raised-keyboard-focus: {
+          background-color: var(--paper-red-a200) !important;
+          color: white !important;
+        };
+
+        margin: 20px 0px;
+
+        border-radius: 13px;
+      }
+
+      paper-button.custom:hover {
+        background-color: var(--paper-blue-100);
+      }
+
+      paper-button.blue {
+        background-color: var(--paper-blue-500);
+        color: white;
+      }
+
+      paper-button.blue[active] {
+        background-color: var(--paper-blue-700);
+      }
+      paper-button.disabled {
+        color: white;
+        background-color: #bfbfbf;
+      }
+
+      span.title {
+        display: block;
+        font-size: 1.3em;
+      }
+
+      span .subtitle {
+        display: block;
+        font-size: 0.7em;
+        max-width: 150px;
+      }
+
+      div.section-header {
+        margin: 20px 5px;
+        font-size: 1.5em;
+        color: #0033cc;
+      }
+
+      div.container {
+        margin: 40px auto;
+        width: 1200px;
+      }
+
+    </style>
+
+    <app-toolbar class="tabs-bar">
+      <div main-title>BITS Toolbar Customizer</div>
+    </app-toolbar>
+
+  <div class="layout vertical container">
+    <div class="section-header">Hide the following toolbar items</div>
+
+    <div class="layout horizontal start-justified">
+      <paper-checkbox class="blue spacer">
+        <span class="title">GALLERY</span>
+        <span class="subtitle">
+          BITS Sidebar Button
+        </span>
+      </paper-checkbox>
+
+      <paper-checkbox class="blue spacer">
+        <span class="title">BITS LOGO</span>
+        <span class="subtitle">
+          BITS Logo (Entered as text or stack icon)
+        </span>
+      </paper-checkbox>
+
+      <paper-checkbox class="blue spacer" checked={{powerMenu::change}}>
+        <span class="title">POWER MENU</span>
+        <span class="subtitle">
+          Enables power-off, reboot, etc.
+        </span>
+      </paper-checkbox>
+
+      <paper-checkbox class="blue spacer" disabled=[[powerMenu]]>
+        <span class="title">POWER MENU ITEMS</span>
+        <span class="subtitle">
+          Hide specific menu items
+        </span>
+      </paper-checkbox>
+    </div>
+
+    <div class="section-header">Hide the following Gallery item</div>
+    <div class="layout horizontal start-justified">
+      <paper-checkbox class="blue spacer" checked={{homeMenu::change}}>
+        <span class="title">HOME</span>
+        <span class="subtitle">
+          Hide the /home page route
+        </span>
+      </paper-checkbox>
+    </div>
+
+    <div class="section-header">Hide the following Home items</div>
+    <div class="layout horizontal start-justified">
+      <paper-checkbox class="blue spacer" disabled=[[homeMenu]]>
+        <span class="title">Dashboard</span>
+      </paper-checkbox>
+
+      <paper-checkbox class="blue spacer" disabled=[[homeMenu]]>
+        <span class="title">Activity</span>
+      </paper-checkbox>
+
+      <paper-checkbox class="blue spacer" disabled=[[homeMenu]]>
+        <span class="title">Users</span>
+      </paper-checkbox>
+
+      <paper-checkbox class="blue spacer" disabled=[[homeMenu]]>
+        <span class="title">OMGs</span>
+      </paper-checkbox>
+
+      <paper-checkbox class="blue spacer" disabled=[[homeMenu]]>
+        <span class="title">Modules</span>
+      </paper-checkbox>
+
+      <paper-checkbox class="blue spacer" disabled=[[homeMenu]]>
+        <span class="title">Logs</span>
+      </paper-checkbox>
+    </div>
+
+    <div class="layout horizontal start-justified">
+      <paper-button raised class="custom blue">Save Changes</paper-button>
+    </div>
+  </div>
+
+  </template>
+  <script>
+  (() => {
+    'use strict';
+
+    const BreakException = {};
+
+    Polymer({
+
+      is: 'bits-toolbar-customizer-app',
+
+      properties: {
+        powerMenu: {
+          type: Boolean,
+          notify: true
+        },
+        homeMenu: {
+          type: Boolean,
+          notify: true
+        }
+      },
+
+      ready: function() {
+
+      },
+
+      _onColorSelect(color) {
+        console.log(color);
+      },
+
+      listeners: {
+        'home-menu-changed': '_onHomeMenu',
+        'power-menu-changed': '_onPowerMenu',
+      },
+
+      _onHomeMenu: function(e) {
+        console.log(`Home menu hidden: ${e.detail.value}`)
+      },
+
+      _onPowerMenu: function(e) {
+        console.log(`Power menu hidden: ${e.detail.value}`)
+      }
+
+    });
+
+  })();
+  </script>
+</dom-module>

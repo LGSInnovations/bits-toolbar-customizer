@@ -5,6 +5,8 @@
         "bits-base": "^2.0.0"
     },
     "appDir": "app/",
+    "contentElement": "bits-toolbar-customizer-app",
+    "contentImport": "/elements/bits-toolbar-customizer/bits-toolbar-customizer-app.html",
     "scopes": [
         {
             "name": "public",
