@@ -6,9 +6,13 @@
 <link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 
+<!-- import global object TOOLBAR_CUSTOMIZER with query definitions-->
+<script type="text/javascript" src="./constants.js"></script>
+
 <dom-module id="bits-toolbar-customizer-app">
   <template>
     <style include="iron-flex iron-flex-alignment">
+
       :host {
         display: block;
         width: 100vw;
@@ -30,7 +34,7 @@
         margin: 0 5px;
       }
 
-      paper-checkbox.blue {
+      paper-checkbox {
         align-self: center;
         border: 2px solid #1e88e5;
         padding: 8px 16px;
@@ -45,6 +49,10 @@
         --paper-checkbox-margin: 8px 16px 8px 0;
         --paper-checkbox-vertical-align: top;
         --paper-checkbox-label-checked-color: #ff0000;
+      }
+
+      paper-checkbox[disabled] {
+        background-color: #f0f0f0;
       }
 
       paper-button.custom {
@@ -67,14 +75,15 @@
         background-color: var(--paper-blue-100);
       }
 
-      paper-button.blue {
+      paper-button {
         background-color: var(--paper-blue-500);
         color: white;
       }
 
-      paper-button.blue[active] {
+      paper-button[active] {
         background-color: var(--paper-blue-700);
       }
+
       paper-button.disabled {
         color: white;
         background-color: #bfbfbf;
@@ -91,10 +100,14 @@
         max-width: 150px;
       }
 
-      div.section-header {
+      label.section-header {
         margin: 20px 5px;
         font-size: 1.5em;
         color: #0033cc;
+      }
+
+      label.section-header[disabled] {
+        color:#bfbfbf;
       }
 
       div.container {
@@ -109,77 +122,94 @@
     </app-toolbar>
 
   <div class="layout vertical container">
-    <div class="section-header">Hide the following toolbar items</div>
+    <label class="section-header">Hide the following toolbar items</label>
 
     <div class="layout horizontal start-justified">
-      <paper-checkbox class="blue spacer">
+      <paper-checkbox class="spacer" checked={{gallery::change}}>
         <span class="title">GALLERY</span>
         <span class="subtitle">
-          BITS Sidebar Button
+          Button to open the sidebar (stack icon)
         </span>
       </paper-checkbox>
 
-      <paper-checkbox class="blue spacer">
+      <paper-checkbox class="spacer" checked={{logo::change}}>
         <span class="title">BITS LOGO</span>
         <span class="subtitle">
-          BITS Logo (Entered as text or stack icon)
+          BITS Logo (Rendered as "BITS" or stack icon)
         </span>
       </paper-checkbox>
 
-      <paper-checkbox class="blue spacer" checked={{powerMenu::change}}>
+      <paper-checkbox class="spacer" checked={{powerMenu::change}}>
         <span class="title">POWER MENU</span>
         <span class="subtitle">
-          Enables power-off, reboot, etc.
-        </span>
-      </paper-checkbox>
-
-      <paper-checkbox class="blue spacer" disabled=[[powerMenu]]>
-        <span class="title">POWER MENU ITEMS</span>
-        <span class="subtitle">
-          Hide specific menu items
+          Menu with system controls
         </span>
       </paper-checkbox>
     </div>
 
-    <div class="section-header">Hide the following Gallery item</div>
+    <label class="section-header" disabled$=[[powerMenu]]>Hide the following power menu items</label>
     <div class="layout horizontal start-justified">
-      <paper-checkbox class="blue spacer" checked={{homeMenu::change}}>
+      <paper-checkbox class="spacer" checked={{powerOff::change}} disabled=[[powerMenu]]>
+        <span class="title">POWER OFF</span>
+        <span class="subtitle">
+          Power off server host
+        </span>
+      </paper-checkbox>
+
+      <paper-checkbox class="spacer" checked={{reboot::change}} disabled=[[powerMenu]]>
+        <span class="title">REBOOT</span>
+        <span class="subtitle">
+          Reboot server host
+        </span>
+      </paper-checkbox>
+
+      <paper-checkbox class="spacer" checked={{signOut::change}} disabled=[[powerMenu]]>
+        <span class="title">SIGN OUT</span>
+        <span class="subtitle">
+          Sign out of BITS
+        </span>
+      </paper-checkbox>
+    </div>
+
+    <label class="section-header">Hide the following Sidebar item</label>
+    <div class="layout horizontal start-justified">
+      <paper-checkbox class="spacer" checked={{homeSidebar::change}}>
         <span class="title">HOME</span>
         <span class="subtitle">
-          Hide the /home page route
+          The /home page route and sidebar link to it
         </span>
       </paper-checkbox>
     </div>
 
-    <div class="section-header">Hide the following Home items</div>
+    <label class="section-header" disabled$=[[homeSidebar]]>Hide the following Home Sidebar items</label>
     <div class="layout horizontal start-justified">
-      <paper-checkbox class="blue spacer" disabled=[[homeMenu]]>
+      <paper-checkbox class="spacer" checked={{dashboard::change}} disabled=[[homeSidebar]]>
         <span class="title">Dashboard</span>
       </paper-checkbox>
 
-      <paper-checkbox class="blue spacer" disabled=[[homeMenu]]>
+      <paper-checkbox class="spacer" checked={{activity::change}} disabled=[[homeSidebar]]>
         <span class="title">Activity</span>
       </paper-checkbox>
 
-      <paper-checkbox class="blue spacer" disabled=[[homeMenu]]>
+      <paper-checkbox class="spacer" checked={{users::change}} disabled=[[homeSidebar]]>
         <span class="title">Users</span>
       </paper-checkbox>
 
-      <paper-checkbox class="blue spacer" disabled=[[homeMenu]]>
+      <paper-checkbox class="spacer" checked={{omgs::change}} disabled=[[homeSidebar]]>
         <span class="title">OMGs</span>
       </paper-checkbox>
 
-      <paper-checkbox class="blue spacer" disabled=[[homeMenu]]>
+      <paper-checkbox class="spacer" checked={{modules::change}} disabled=[[homeSidebar]]>
         <span class="title">Modules</span>
       </paper-checkbox>
 
-      <paper-checkbox class="blue spacer" disabled=[[homeMenu]]>
+      <paper-checkbox class="spacer" checked={{logs::change}} disabled=[[homeSidebar]]>
         <span class="title">Logs</span>
       </paper-checkbox>
     </div>
 
     <div class="layout horizontal start-justified">
-      <paper-button raised class="custom blue">Save Changes</paper-button>
+      <paper-button raised class="custom" on-tap='_onSaveChanges'>Save Changes</paper-button>
     </div>
   </div>
 
@@ -195,11 +225,55 @@
       is: 'bits-toolbar-customizer-app',
 
       properties: {
+        gallery: {
+          type: Boolean,
+          notify: true
+        },
+        logo: {
+          type: Boolean,
+          notify: true
+        },
         powerMenu: {
           type: Boolean,
           notify: true
         },
-        homeMenu: {
+        powerOff: {
+          type: Boolean,
+          notify: true
+        },
+        reboot: {
+          type: Boolean,
+          notify: true
+        },
+        signOut: {
+          type: Boolean,
+          notify: true
+        },
+        homeSidebar: {
+          type: Boolean,
+          notify: true
+        },
+        dashboard: {
+          type: Boolean,
+          notify: true
+        },
+        activity: {
+          type: Boolean,
+          notify: true
+        },
+        users: {
+          type: Boolean,
+          notify: true
+        },
+        omgs: {
+          type: Boolean,
+          notify: true
+        },
+        modules: {
+          type: Boolean,
+          notify: true
+        },
+        logs: {
           type: Boolean,
           notify: true
         }
@@ -209,21 +283,31 @@
 
       },
 
-      _onColorSelect(color) {
-        console.log(color);
+      _onSaveChanges(e) {
+        console.log(`save ${JSON.stringify(e)}`);
+        // Object.keys(this.properties).forEach( (key) => {
+        //   console.log(key, this[key]);
+        // });
+        const queries = Object.keys(this.properties).reduce( (accum, prop) => {
+          if (typeof this[prop] != 'undefined' && this[prop]) {
+            accum.push(TOOLBAR_CUSTOMIZER_QUERIES[prop]);
+          }
+          return accum;
+        }, [])
+        console.log(JSON.stringify(queries));
       },
 
       listeners: {
-        'home-menu-changed': '_onHomeMenu',
+        'home-menu-changed': '_onhomeSidebar',
         'power-menu-changed': '_onPowerMenu',
       },
 
-      _onHomeMenu: function(e) {
-        console.log(`Home menu hidden: ${e.detail.value}`)
+      _onhomeSidebar: function(e) {
+        console.log(`Home menu hidden: ${e.detail.value}`);
       },
 
       _onPowerMenu: function(e) {
-        console.log(`Power menu hidden: ${e.detail.value}`)
+        console.log(`Power menu hidden: ${e.detail.value}`);
       }
 
     });
