@@ -289,6 +289,36 @@
 
       },
 
+      // _onSaveChanges(e) {
+      //   // console.log(`save ${JSON.stringify(e)}`);
+      //   // Object.keys(this.properties).forEach( (key) => {
+      //   //   console.log(key, this[key]);
+      //   // });
+      //   const queries = {ownerDocument: [], toolbar: []}
+      //   const homeItemQueries = [];
+      //   Object.keys(this.properties).forEach( (prop) => {
+      //     if (typeof this[prop] != 'undefined' && this[prop]) {
+      //       const entry = QUERY_DEFS[prop]
+      //       if (entry.target == 'ownerDocument' || !prop.startsWith('home')) {
+      //         homeItemQueries.push(entry.query);
+      //       } else {
+      //         queries[entry.target].push(entry.query);
+      //       }
+      //       if (prop === 'homeSidebar') {
+      //         queries[entry.target].push(QUERY_DEFS['homeLink'].query);
+      //       }
+      //     }
+      //   });
+      //   queries.ownerDocument.push(QUERY_DEFS.getOptimizedHomeItemsQuery(homeItemQueries));
+      //   console.log(JSON.stringify(queries, null, 2));
+      //   this.sendRequest(REQUESTS.SET_CUSTOMIZATIONS, queries);
+      // },
+      //
+      // listeners: {
+      //   'home-menu-changed': '_onhomeSidebar',
+      //   'power-menu-changed': '_onPowerMenu',
+      // },
+
       _onSaveChanges(e) {
         // console.log(`save ${JSON.stringify(e)}`);
         // Object.keys(this.properties).forEach( (key) => {
@@ -307,11 +337,6 @@
         });
         console.log(JSON.stringify(queries, null, 2));
         this.sendRequest(REQUESTS.SET_CUSTOMIZATIONS, queries);
-      },
-
-      listeners: {
-        'home-menu-changed': '_onhomeSidebar',
-        'power-menu-changed': '_onPowerMenu',
       },
 
       _onhomeSidebar: function(e) {

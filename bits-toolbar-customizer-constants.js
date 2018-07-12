@@ -1,6 +1,7 @@
 ((global) => {
   'use strict';
   const QUERIES = {
+    // Stack icon on left side of toolbar, defined in base-toolbar.html
     gallery: {
       query: [
         ['id', 'gallery'],
@@ -9,6 +10,7 @@
       target: 'toolbar'
     },
 
+    // BITS label in toolbar next to gallery, defined in base-toolbar.html
     logo: {
       query: [
         ['textContent', 'BITS'],
@@ -17,6 +19,7 @@
       target: 'toolbar'
     },
 
+    // Power menu items, defined in 'base-system-power-control.html'
     powerMenu: {
       query: [
         ['id', 'menu'],
@@ -25,6 +28,7 @@
       target: 'toolbar'
     },
 
+    // Power menu item defined in 'base-system-power-control.html'
     powerOff: {
       query: [
         ['tagName', 'paper-item'],
@@ -33,6 +37,7 @@
       target: 'toolbar'
     },
 
+    // Power menu item defined in 'base-system-power-control.html'
     reboot: {
         query: [
         ['tagName', 'paper-item'],
@@ -41,6 +46,7 @@
       target: 'toolbar'
     },
 
+    // Power menu item defined in 'base-system-power-control.html'
     signOut: {
       query: [
         ['tagName', 'paper-item'],
@@ -49,6 +55,7 @@
       target: 'toolbar'
     },
 
+    /* The Home sidebar (displayed at server route /home). Defined in base-home.html. */
     homeSidebar: {
       query: [
         [ 'tagName', 'base-home']
@@ -56,6 +63,7 @@
       target: 'ownerDocument'
     },
 
+    // The Home link in the sidebar. Defined in base-gallery.html.
     homeLink: {
       query: [
         ['textContent', 'Home', 'parentNode.parentNode.host.style'],
@@ -64,17 +72,21 @@
       target: 'ownerDocument'
     },
 
+    /* The following queries select individual items displayed in the home sidebar.
+       Select one or more of these as an alternative to hiding the entire home
+       sidebar (queries homeSidebar and homeLink). See computeSidebar(user) in base-home.html
+
+       One or more of these can be added to an array and submitted as a sub
+
+       NB: This is currently not working properly. The hidden items will still appear
+       after clicking the "Home" link in the gallery, but will be hidden if you refresh the page
+     */
+
     dashboard: {
       query: [
         [ 'tagName', 'base-home', null,
-          /* If this is null, hide base-home. Otherwise, execute this query on base-home.
-          However, this has a flaw. The hidden items will still appear after clicking the
-          "Home" link in the gallery, but will be hidden if you refresh the page.*/
           [
-            [
-              /* See computeSidebar(user) in base-home.html */
-              ['textContent', 'Dashboard', 'parentNode.style']
-            ]
+            ['textContent', 'Dashboard', 'parentNode.style']
           ]
         ]
       ],
@@ -84,14 +96,8 @@
     activity: {
       query: [
         [ 'tagName', 'base-home', null,
-          /* If this is null, hide base-home. Otherwise, execute this query on base-home.
-          However, this has a flaw. The hidden items will still appear after clicking the
-          "Home" link in the gallery, but will be hidden if you refresh the page.*/
           [
-            [
-              /* See computeSidebar(user) in base-home.html */
-              ['textContent', 'Activity', 'parentNode.style']
-            ]
+            ['textContent', 'Activity', 'parentNode.style']
           ]
         ]
       ],
@@ -101,14 +107,8 @@
     users: {
       query: [
         [ 'tagName', 'base-home', null,
-          /* If this is null, hide base-home. Otherwise, execute this query on base-home.
-          However, this has a flaw. The hidden items will still appear after clicking the
-          "Home" link in the gallery, but will be hidden if you refresh the page.*/
           [
-            [
-              /* See computeSidebar(user) in base-home.html */
-              ['textContent', 'Users', 'parentNode.style']
-            ]
+            ['textContent', 'Users', 'parentNode.style']
           ]
         ]
       ],
@@ -118,14 +118,8 @@
     omgs: {
       query: [
         [ 'tagName', 'base-home', null,
-          /* If this is null, hide base-home. Otherwise, execute this query on base-home.
-          However, this has a flaw. The hidden items will still appear after clicking the
-          "Home" link in the gallery, but will be hidden if you refresh the page.*/
           [
-            [
-              /* See computeSidebar(user) in base-home.html */
-              ['textContent', 'OMGs', 'parentNode.style']
-            ]
+            ['textContent', 'OMGs', 'parentNode.style']
           ]
         ]
       ],
@@ -135,14 +129,8 @@
     modules: {
       query: [
         [ 'tagName', 'base-home', null,
-          /* If this is null, hide base-home. Otherwise, execute this query on base-home.
-          However, this has a flaw. The hidden items will still appear after clicking the
-          "Home" link in the gallery, but will be hidden if you refresh the page.*/
           [
-            [
-              /* See computeSidebar(user) in base-home.html */
-              ['textContent', 'Modules', 'parentNode.style']
-            ]
+            ['textContent', 'Modules', 'parentNode.style']
           ]
         ]
       ],
@@ -152,18 +140,20 @@
     logs: {
       query: [
         [ 'tagName', 'base-home', null,
-          /* If this is null, hide base-home. Otherwise, execute this query on base-home.
-          However, this has a flaw. The hidden items will still appear after clicking the
-          "Home" link in the gallery, but will be hidden if you refresh the page.*/
           [
-            [
-              /* See computeSidebar(user) in base-home.html */
-              ['textContent', 'Logs', 'parentNode.style']
-            ]
+            ['textContent', 'Logs', 'parentNode.style']
           ]
         ]
       ],
       target: 'ownerDocument'
+    },
+
+    getOptimizedHomeItemsQuery: function(queries) {
+      const query = queries.shift();
+      return queries.reduce( (accum, val, idx, arr) => {
+          accum[0][3].push(val[0][3][0]);
+          return accum;
+      }, query);
     }
   };
 
@@ -173,7 +163,7 @@
     GET_CUSTOMIZATIONS: PREFIX + 'get customizations'
   }
 
-  //Use from client side as well as server side
+  //Use from uncompiled browser or node.js context
   if (typeof(module) != 'undefined') {
     module.exports = {QUERIES, REQUESTS};
   }

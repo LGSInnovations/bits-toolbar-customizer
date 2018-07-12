@@ -64,100 +64,32 @@
             this.sendRequest(REQUESTS.GET_CUSTOMIZATIONS)
             .then ((data) => {
               if (data && data.toolbar) {
-                this._deepSearch(toolbar, data.toolbar,
-                  (node, toHide) => {
-                    toHide.display = 'none';
-                    // console.log(`hide ${toHide.id}`);
-                  }
-                );
+                data.toolbar.forEach( (query) => {
+                  this._deepSearch(toolbar, [query],
+                    (node, toHide) => {
+                      toHide.display = 'none';
+                    }
+                  );
+                });
+
               }
               if (data && data.ownerDocument) {
                 this._deepSearch(this.ownerDocument, data.ownerDocument,
                   (node, toHide, nextQuery) => {
                     if (nextQuery) {
-                      this._deepSearch(node, nextQuery,
-                      (node, toHide) => {
-                        toHide.display = 'none';
+                      nextQuery.forEach( (query) => {
+                        this._deepSearch(node, [query],
+                        (node, toHide) => {
+                          toHide.display = 'none';
+                        });
                       });
                     } else {
                       toHide.display = 'none';
                     }
-                    // console.log(`hide ${toHide.id}`);
                   }
                 );
               }
             });
-            /* Hide entire sidebar. We hode the sidebar itself (tagname = 'base-home')
-               and the category item 'Home' that appears in the gallery. */
-          //   this._deepSearch(this.ownerDocument, [
-          //     /* The Home sidebar. Defined in base-home.html.*/
-          //     [
-          //       [ 'tagName', 'base-home', null,
-          //         /* If this is null, hide base-home. Otherwise, execute this query on base-home.
-          //         However, this has a flaw. The hidden items will still appear after clicking the
-          //         "Home" link in the gallery, but will be hidden if you refresh the page.*/
-          //         [
-          //           [
-          //             /* See computeSidebar(user) in base-home.html */
-          //             ['textContent', 'Activity', 'parentNode.style']
-          //           ]
-          //         ]
-          //       ]
-          //     ],
-          //     // [
-          //     //   // The Home link in the gallery. Added in base-gallery.html.
-          //     //   ['textContent', 'Home', 'parentNode.parentNode.host.style'],
-          //     //   ['parentNode.parentNode.host.tagName', 'base-gallery-category', 'parentNode.parentNode.host.style']
-          //     // ]
-          //   ],
-          //   (node, toHide, nextQuery) => {
-          //     if (nextQuery) {
-          //       this._deepSearch(node, nextQuery,
-          //       (node, toHide) => {
-          //         toHide.display = 'none';
-          //         console.log(`hide ${toHide.id} after ${this.count} recursive searches`);
-          //         this.count = 0;
-          //       });
-          //     } else {
-          //       toHide.display = 'none';
-          //       console.log(`hide ${toHide.id} after ${this.count} recursive searches`);
-          //       this.count = 0;
-          //     }
-          //
-          //
-          //   });
-          //   const toolbar = this._findToolbar(this.parentElement);
-          //   toolbar && this._deepSearch(toolbar, [
-          //     // Power menu, defined in 'base-system-power-control.html'
-          //     // [
-          //     //   ['id', 'menu'],
-          //     //   ['parentNode.host.tagName', 'base-system-power-control']
-          //     // ],
-          //     // BITS label in toolbar next to gallery, defined in base-toolbar.html
-          //     // [
-          //     //   ['textContent', 'BITS'],
-          //     //   ['parentNode.parentNode.tagName', 'app-toolbar']
-          //     // ],
-          //     // Stack icon on left side of toolbar, defined in base-toolbar.html
-          //     // [
-          //     //   ['id', 'gallery'],
-          //     //   ['tagName', 'paper-icon-button']
-          //     // ],
-          //     // Power menu items, defined in 'base-system-power-control.html'
-          //     // [
-          //     //   ['tagName', 'paper-item'],
-          //     //   ['textContent', 'Power off']
-          //     // ],
-          //     // [
-          //     //   ['tagName', 'paper-item'],
-          //     //   ['textContent', 'Reboot']
-          //     // ]
-          //   ],
-          //   (node, toHide) => {
-          //     toHide.display = 'none';
-          //     console.log(`hide ${toHide.id} after ${this.count} recursive searches`);
-          //     this.count = 0;
-          //   });
           }
         }, 100)
       },
@@ -183,7 +115,7 @@
           let toHide = {};
           let nextQuery = {};
           if (this._match(parent, query, toHide, nextQuery)) {
-            cb(parent, toHide.item, nextQuery.item);
+            cb(parent, toHide.item, nextQuery.items);
             if (++this.matches >= query.length) {
               throw BreakException;
             }
@@ -192,7 +124,7 @@
             let toHide = {};
             let nextQuery = {};
             if (this._match(node, query, toHide, nextQuery)) {
-              cb(node, toHide.item, nextQuery.item)
+              cb(node, toHide.item, nextQuery.items)
               if (++this.matches >= query.length) {
                 throw BreakException;
               }
@@ -205,7 +137,7 @@
               let toHide = {};
               let nextQuery = {};
               if (this._match(node, query, toHide, nextQuery)) {
-                cb(node, toHide.item, nextQuery.item);
+                cb(node, toHide.item, nextQuery.items);
                 if (++this.matches >= query.length) {
                   throw BreakException;
                 }
@@ -223,6 +155,7 @@
 
       _match(node, query, toHide, nextQuery) {
         let found;
+        let items = [];
         try {
           query.forEach( (q) => {
             found = true;
@@ -233,7 +166,9 @@
                     found = false;
                 } else {
                   toHide.item = this._getNestedObject(node, kv[2] ? kv[2] : 'style');
-                  nextQuery.item = kv[3] ? kv[3] : null;
+                  if (kv[3]) {
+                    items.push(kv[3])
+                  }
                 }
               } catch (e) {
                 found = false;
@@ -246,6 +181,7 @@
         } catch (e) {
           // PASS
         }
+        nextQuery.items = items.length > 0 ? items : null;
         return found;
       },
 
