@@ -5,6 +5,9 @@
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
 
+<!-- import global object TOOLBAR_CUSTOMIZER with query definitions-->
+<script type="text/javascript" src="./bits-toolbar-customizer-constants.js"></script>
+
 <dom-module id="bits-toolbar-customizer">
   <template>
     <style>
@@ -28,14 +31,18 @@
 
   </template>
   <script>
-  (() => {
+  ((global) => {
     'use strict';
 
     const BreakException = {};
 
+    const REQUESTS = TOOLBAR_CUSTOMIZER.REQUESTS;
+
     Polymer({
 
       is: 'bits-toolbar-customizer',
+
+      behaviors: [global.Bits.BaseMessageCenterBehavior],
 
       properties: {
         count: {
@@ -53,77 +60,104 @@
         const poll = setInterval( () => {
           if (this.parentElement) {
             clearTimeout(poll);
+            const toolbar = this._findToolbar(this.parentElement);
+            this.sendRequest(REQUESTS.GET_CUSTOMIZATIONS)
+            .then ((data) => {
+              if (data && data.toolbar) {
+                this._deepSearch(toolbar, data.toolbar,
+                  (node, toHide) => {
+                    toHide.display = 'none';
+                    // console.log(`hide ${toHide.id}`);
+                  }
+                );
+              }
+              if (data && data.ownerDocument) {
+                this._deepSearch(this.ownerDocument, data.ownerDocument,
+                  (node, toHide, nextQuery) => {
+                    if (nextQuery) {
+                      this._deepSearch(node, nextQuery,
+                      (node, toHide) => {
+                        toHide.display = 'none';
+                      });
+                    } else {
+                      toHide.display = 'none';
+                    }
+                    // console.log(`hide ${toHide.id}`);
+                  }
+                );
+              }
+            });
             /* Hide entire sidebar. We hode the sidebar itself (tagname = 'base-home')
                and the category item 'Home' that appears in the gallery. */
-            this._deepSearch(this.ownerDocument, [
-              /* The Home sidebar. Defined in base-home.html.*/
-              [
-                [ 'tagName', 'base-home', null,
-                  /* If this is null, hide base-home. Otherwise, execute this query on base-home.
-                  However, this has a flaw. The hidden items will still appear after clicking the
-                  "Home" link in the gallery, but will be hidden if you refresh the page.*/
-                  [
-                    [
-                      /* See computeSidebar(user) in base-home.html */
-                      ['textContent', 'Activity', 'parentNode.style']
-                    ]
-                  ]
-                ]
-              ],
-              // [
-              //   // The Home link in the gallery. Added in base-gallery.html.
-              //   ['textContent', 'Home', 'parentNode.parentNode.host.style'],
-              //   ['parentNode.parentNode.host.tagName', 'base-gallery-category', 'parentNode.parentNode.host.style']
-              // ]
-            ],
-            (node, toHide, nextQuery) => {
-              if (nextQuery) {
-                this._deepSearch(node, nextQuery,
-                (node, toHide) => {
-                  toHide.display = 'none';
-                  console.log(`hide ${toHide.id} after ${this.count} recursive searches`);
-                  this.count = 0;
-                });
-              } else {
-                toHide.display = 'none';
-                console.log(`hide ${toHide.id} after ${this.count} recursive searches`);
-                this.count = 0;
-              }
-
-
-            });
-            const toolbar = this._findToolbar(this.parentElement);
-            toolbar && this._deepSearch(toolbar, [
-              // Power menu, defined in 'base-system-power-control.html'
-              // [
-              //   ['id', 'menu'],
-              //   ['parentNode.host.tagName', 'base-system-power-control']
-              // ],
-              // BITS label in toolbar next to gallery, defined in base-toolbar.html
-              // [
-              //   ['textContent', 'BITS'],
-              //   ['parentNode.parentNode.tagName', 'app-toolbar']
-              // ],
-              // Stack icon on left side of toolbar, defined in base-toolbar.html
-              // [
-              //   ['id', 'gallery'],
-              //   ['tagName', 'paper-icon-button']
-              // ],
-              // Power menu items, defined in 'base-system-power-control.html'
-              // [
-              //   ['tagName', 'paper-item'],
-              //   ['textContent', 'Power off']
-              // ],
-              // [
-              //   ['tagName', 'paper-item'],
-              //   ['textContent', 'Reboot']
-              // ]
-            ],
-            (node, toHide) => {
-              toHide.display = 'none';
-              console.log(`hide ${toHide.id} after ${this.count} recursive searches`);
-              this.count = 0;
-            });
+          //   this._deepSearch(this.ownerDocument, [
+          //     /* The Home sidebar. Defined in base-home.html.*/
+          //     [
+          //       [ 'tagName', 'base-home', null,
+          //         /* If this is null, hide base-home. Otherwise, execute this query on base-home.
+          //         However, this has a flaw. The hidden items will still appear after clicking the
+          //         "Home" link in the gallery, but will be hidden if you refresh the page.*/
+          //         [
+          //           [
+          //             /* See computeSidebar(user) in base-home.html */
+          //             ['textContent', 'Activity', 'parentNode.style']
+          //           ]
+          //         ]
+          //       ]
+          //     ],
+          //     // [
+          //     //   // The Home link in the gallery. Added in base-gallery.html.
+          //     //   ['textContent', 'Home', 'parentNode.parentNode.host.style'],
+          //     //   ['parentNode.parentNode.host.tagName', 'base-gallery-category', 'parentNode.parentNode.host.style']
+          //     // ]
+          //   ],
+          //   (node, toHide, nextQuery) => {
+          //     if (nextQuery) {
+          //       this._deepSearch(node, nextQuery,
+          //       (node, toHide) => {
+          //         toHide.display = 'none';
+          //         console.log(`hide ${toHide.id} after ${this.count} recursive searches`);
+          //         this.count = 0;
+          //       });
+          //     } else {
+          //       toHide.display = 'none';
+          //       console.log(`hide ${toHide.id} after ${this.count} recursive searches`);
+          //       this.count = 0;
+          //     }
+          //
+          //
+          //   });
+          //   const toolbar = this._findToolbar(this.parentElement);
+          //   toolbar && this._deepSearch(toolbar, [
+          //     // Power menu, defined in 'base-system-power-control.html'
+          //     // [
+          //     //   ['id', 'menu'],
+          //     //   ['parentNode.host.tagName', 'base-system-power-control']
+          //     // ],
+          //     // BITS label in toolbar next to gallery, defined in base-toolbar.html
+          //     // [
+          //     //   ['textContent', 'BITS'],
+          //     //   ['parentNode.parentNode.tagName', 'app-toolbar']
+          //     // ],
+          //     // Stack icon on left side of toolbar, defined in base-toolbar.html
+          //     // [
+          //     //   ['id', 'gallery'],
+          //     //   ['tagName', 'paper-icon-button']
+          //     // ],
+          //     // Power menu items, defined in 'base-system-power-control.html'
+          //     // [
+          //     //   ['tagName', 'paper-item'],
+          //     //   ['textContent', 'Power off']
+          //     // ],
+          //     // [
+          //     //   ['tagName', 'paper-item'],
+          //     //   ['textContent', 'Reboot']
+          //     // ]
+          //   ],
+          //   (node, toHide) => {
+          //     toHide.display = 'none';
+          //     console.log(`hide ${toHide.id} after ${this.count} recursive searches`);
+          //     this.count = 0;
+          //   });
           }
         }, 100)
       },
@@ -205,9 +239,9 @@
                 found = false;
               }
             });
-            if (found) {
-              throw BreakException;
-            }
+            // if (found) {
+            //   throw BreakException;
+            // }
           });
         } catch (e) {
           // PASS
@@ -220,6 +254,6 @@
       }
     });
 
-  })();
+  })(window);
   </script>
 </dom-module>

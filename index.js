@@ -7,13 +7,15 @@
   const CrudApi = global.helper.CrudApi;
   const CrudManager = global.helper.CrudManager;
 
+  const BitsToolbarCustomizerManager = require('./bits-toolbar-customizer-manager');
+
   class BitsToolbarCustomizerApp{
     /**
      * Called when the module is constructed.
      */
     constructor() {
       this._messenger = new Messenger();
-
+      this._manager = new BitsToolbarCustomizerManager();
     }
 
     /**
@@ -23,6 +25,8 @@
      */
     load(messageCenter) {
       logger.info('Loading Bits Toolbar Customizer!');
+
+      this._manager.load(messageCenter);
 
       this._toolbarItemApi = new CrudApi('base#ToolbarItems', messageCenter, {scopes: null});
 

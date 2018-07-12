@@ -7,7 +7,7 @@
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 
 <!-- import global object TOOLBAR_CUSTOMIZER with query definitions-->
-<script type="text/javascript" src="./constants.js"></script>
+<script type="text/javascript" src="./bits-toolbar-customizer-constants.js"></script>
 
 <dom-module id="bits-toolbar-customizer-app">
   <template>
@@ -215,14 +215,20 @@
 
   </template>
   <script>
-  (() => {
+  ((global) => {
     'use strict';
 
     const BreakException = {};
 
+    const QUERY_DEFS = TOOLBAR_CUSTOMIZER.QUERIES;
+
+    const REQUESTS = TOOLBAR_CUSTOMIZER.REQUESTS;
+
     Polymer({
 
       is: 'bits-toolbar-customizer-app',
+
+      behaviors: [global.Bits.BaseMessageCenterBehavior],
 
       properties: {
         gallery: {
@@ -284,17 +290,23 @@
       },
 
       _onSaveChanges(e) {
-        console.log(`save ${JSON.stringify(e)}`);
+        // console.log(`save ${JSON.stringify(e)}`);
         // Object.keys(this.properties).forEach( (key) => {
         //   console.log(key, this[key]);
         // });
-        const queries = Object.keys(this.properties).reduce( (accum, prop) => {
+        const queries = {ownerDocument: [], toolbar: []}
+        const toolbarQueries = [];
+        Object.keys(this.properties).forEach( (prop) => {
           if (typeof this[prop] != 'undefined' && this[prop]) {
-            accum.push(TOOLBAR_CUSTOMIZER_QUERIES[prop]);
+            const entry = QUERY_DEFS[prop]
+            queries[entry.target].push(entry.query);
+            if (prop === 'homeSidebar') {
+              queries[entry.target].push(QUERY_DEFS['homeLink'].query);
+            }
           }
-          return accum;
-        }, [])
-        console.log(JSON.stringify(queries));
+        });
+        console.log(JSON.stringify(queries, null, 2));
+        this.sendRequest(REQUESTS.SET_CUSTOMIZATIONS, queries);
       },
 
       listeners: {
@@ -312,6 +324,6 @@
 
     });
 
-  })();
+  })(window);
   </script>
 </dom-module>
