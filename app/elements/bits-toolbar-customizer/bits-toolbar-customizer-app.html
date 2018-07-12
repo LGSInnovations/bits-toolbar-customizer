@@ -209,7 +209,7 @@
     </div>
 
     <div class="layout horizontal start-justified">
-      <paper-button raised class="custom" on-tap='_onSaveChanges'>Save Changes</paper-button>
+      <paper-button raised disabled$="[[!_isSavePending(hiddenProps, propChanged)]]" class="custom" on-tap='_onSaveChanges'>Save Changes</paper-button>
     </div>
   </div>
 
@@ -224,6 +224,13 @@
 
     const REQUESTS = TOOLBAR_CUSTOMIZER.REQUESTS;
 
+    const EVENTS = TOOLBAR_CUSTOMIZER.EVENTS;
+
+    const hidableProp = function(prop) {
+      return prop != 'hiddenProps' && prop != 'propChanged'
+        && prop != 'savePending';
+    }
+
     Polymer({
 
       is: 'bits-toolbar-customizer-app',
@@ -233,118 +240,159 @@
       properties: {
         gallery: {
           type: Boolean,
-          notify: true
+          notify: true,
+          observer: '_onPropChanged'
         },
         logo: {
           type: Boolean,
-          notify: true
+          notify: true,
+          observer: '_onPropChanged'
         },
         powerMenu: {
           type: Boolean,
-          notify: true
+          notify: true,
+          observer: '_onPropChanged'
         },
         powerOff: {
           type: Boolean,
-          notify: true
+          notify: true,
+          observer: '_onPropChanged'
         },
         reboot: {
           type: Boolean,
-          notify: true
+          notify: true,
+          observer: '_onPropChanged'
         },
         signOut: {
           type: Boolean,
-          notify: true
+          notify: true,
+          observer: '_onPropChanged'
         },
         homeSidebar: {
           type: Boolean,
-          notify: true
+          notify: true,
+          observer: '_onPropChanged'
         },
         dashboard: {
           type: Boolean,
-          notify: true
+          notify: true,
+          observer: '_onPropChanged'
         },
         activity: {
           type: Boolean,
-          notify: true
+          notify: true,
+          observer: '_onPropChanged'
         },
         users: {
           type: Boolean,
-          notify: true
+          notify: true,
+          observer: '_onPropChanged'
         },
         omgs: {
           type: Boolean,
-          notify: true
+          notify: true,
+          observer: '_onPropChanged'
         },
         modules: {
           type: Boolean,
-          notify: true
+          notify: true,
+          observer: '_onPropChanged'
         },
         logs: {
           type: Boolean,
+          notify: true,
+          observer: '_onPropChanged'
+        },
+        hiddenProps: {
+          type: Array,
+          value: []
+        },
+        propChanged: {
+          type: Number,
+          value: 1,
           notify: true
+        },
+        savePending: {
+          type: Boolean,
+          computed: '_isSavePending(hiddenProps, propChanged)',
+          notify: true,
+          value: true
         }
       },
 
       ready: function() {
-
+        this.sendRequest(REQUESTS.GET_CUSTOMIZATIONS)
+        .then( (data) => {
+          if (data.hiddenProps) {
+            this.hiddenProps = data.hiddenProps;
+            this.hiddenProps.forEach( (prop) => {
+              this[prop] = true;
+            });
+          }
+        });
+        this.addSocketEventListener(EVENTS.UPDATE_CUSTOMIZATIONS, this._onUpdateCustomizations.bind(this));
       },
 
-      // _onSaveChanges(e) {
-      //   // console.log(`save ${JSON.stringify(e)}`);
-      //   // Object.keys(this.properties).forEach( (key) => {
-      //   //   console.log(key, this[key]);
-      //   // });
-      //   const queries = {ownerDocument: [], toolbar: []}
-      //   const homeItemQueries = [];
-      //   Object.keys(this.properties).forEach( (prop) => {
-      //     if (typeof this[prop] != 'undefined' && this[prop]) {
-      //       const entry = QUERY_DEFS[prop]
-      //       if (entry.target == 'ownerDocument' || !prop.startsWith('home')) {
-      //         homeItemQueries.push(entry.query);
-      //       } else {
-      //         queries[entry.target].push(entry.query);
-      //       }
-      //       if (prop === 'homeSidebar') {
-      //         queries[entry.target].push(QUERY_DEFS['homeLink'].query);
-      //       }
-      //     }
-      //   });
-      //   queries.ownerDocument.push(QUERY_DEFS.getOptimizedHomeItemsQuery(homeItemQueries));
-      //   console.log(JSON.stringify(queries, null, 2));
-      //   this.sendRequest(REQUESTS.SET_CUSTOMIZATIONS, queries);
-      // },
-      //
-      // listeners: {
-      //   'home-menu-changed': '_onhomeSidebar',
-      //   'power-menu-changed': '_onPowerMenu',
-      // },
-
       _onSaveChanges(e) {
-        // console.log(`save ${JSON.stringify(e)}`);
-        // Object.keys(this.properties).forEach( (key) => {
-        //   console.log(key, this[key]);
-        // });
         const queries = {ownerDocument: [], toolbar: []}
-        const toolbarQueries = [];
+        const homeItemQueries = [];
+        let hiddenProps = [];
         Object.keys(this.properties).forEach( (prop) => {
-          if (typeof this[prop] != 'undefined' && this[prop]) {
-            const entry = QUERY_DEFS[prop]
-            queries[entry.target].push(entry.query);
+          if (hidableProp(prop) && typeof this[prop] != 'undefined' && this[prop]) {
+            hiddenProps.push(prop);
+            const queryDef = QUERY_DEFS[prop]
+            if (queryDef.target == 'ownerDocument' && !prop.startsWith('home')) {
+              homeItemQueries.push(queryDef.query);
+            } else {
+              queries[queryDef.target].push(queryDef.query);
+            }
             if (prop === 'homeSidebar') {
-              queries[entry.target].push(QUERY_DEFS['homeLink'].query);
+              queries[queryDef.target].push(QUERY_DEFS['homeLink'].query);
             }
           }
         });
+        if (homeItemQueries.length > 0) {
+          queries.ownerDocument.push(QUERY_DEFS.getOptimizedHomeItemsQuery(homeItemQueries));
+        }
         console.log(JSON.stringify(queries, null, 2));
-        this.sendRequest(REQUESTS.SET_CUSTOMIZATIONS, queries);
+        this.sendRequest(REQUESTS.SET_CUSTOMIZATIONS, {queries, hiddenProps});
       },
 
-      _onhomeSidebar: function(e) {
-        console.log(`Home menu hidden: ${e.detail.value}`);
+      _isSavePending: function(hiddenProps, propChanged) {
+        if (!hiddenProps) {
+          console.log('HIDDEN PROPS IS NULL');
+        }
+        console.log(`hiddenProps ${JSON.stringify(hiddenProps)}`);
+        let res = false;
+        const BreakException = {};
+        try {
+          Object.keys(this.properties).forEach( (prop) => {
+            if (hidableProp(prop) && typeof this[prop] != undefined && this[prop]) {
+              if (hiddenProps && hiddenProps.indexOf(prop) < 0) {
+                res = true;
+                throw BreakException;
+              }
+            } else {
+              if (hiddenProps && hiddenProps.indexOf(prop) >= 0) {
+                res = true;
+                throw BreakException;
+              }
+            }
+          });
+        } catch (e) {
+          if (e !== BreakException) {
+            throw e;
+          }
+        }
+        return res;
       },
 
-      _onPowerMenu: function(e) {
-        console.log(`Power menu hidden: ${e.detail.value}`);
+      _onPropChanged() {
+        this.propChanged = 1 - this.propChanged;
+      },
+
+      _onUpdateCustomizations(data) {
+        this.hiddenProps = data.hiddenProps;
       }
 
     });

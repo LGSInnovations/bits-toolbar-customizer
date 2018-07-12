@@ -63,8 +63,9 @@
             const toolbar = this._findToolbar(this.parentElement);
             this.sendRequest(REQUESTS.GET_CUSTOMIZATIONS)
             .then ((data) => {
-              if (data && data.toolbar) {
-                data.toolbar.forEach( (query) => {
+              let queries = data.queries;
+              if (queries && queries.toolbar) {
+                queries.toolbar.forEach( (query) => {
                   this._deepSearch(toolbar, [query],
                     (node, toHide) => {
                       toHide.display = 'none';
@@ -73,12 +74,12 @@
                 });
 
               }
-              if (data && data.ownerDocument) {
-                this._deepSearch(this.ownerDocument, data.ownerDocument,
-                  (node, toHide, nextQuery) => {
-                    if (nextQuery) {
-                      nextQuery.forEach( (query) => {
-                        this._deepSearch(node, [query],
+              if (queries && queries.ownerDocument) {
+                this._deepSearch(this.ownerDocument, queries.ownerDocument,
+                  (node, toHide, subQueries) => {
+                    if (subQueries) {
+                      subQueries.forEach( (search) => {
+                        this._deepSearch(node, [[search]],
                         (node, toHide) => {
                           toHide.display = 'none';
                         });
@@ -91,7 +92,7 @@
               }
             });
           }
-        }, 100)
+        }, 10)
       },
 
       _findToolbar(parent) {
@@ -113,18 +114,18 @@
         try {
           this.count++;
           let toHide = {};
-          let nextQuery = {};
-          if (this._match(parent, query, toHide, nextQuery)) {
-            cb(parent, toHide.item, nextQuery.items);
+          let subQueries = {};
+          if (this._match(parent, query, toHide, subQueries)) {
+            cb(parent, toHide.item, subQueries.item);
             if (++this.matches >= query.length) {
               throw BreakException;
             }
           }
           parent.childNodes.forEach( (node) => {
             let toHide = {};
-            let nextQuery = {};
-            if (this._match(node, query, toHide, nextQuery)) {
-              cb(node, toHide.item, nextQuery.items)
+            let subQueries = {};
+            if (this._match(node, query, toHide, subQueries)) {
+              cb(node, toHide.item, subQueries.item)
               if (++this.matches >= query.length) {
                 throw BreakException;
               }
@@ -135,9 +136,9 @@
           if (parent.shadowRoot) {
             parent.shadowRoot.childNodes.forEach( (node) => {
               let toHide = {};
-              let nextQuery = {};
-              if (this._match(node, query, toHide, nextQuery)) {
-                cb(node, toHide.item, nextQuery.items);
+              let subQueries = {};
+              if (this._match(node, query, toHide, subQueries)) {
+                cb(node, toHide.item, subQueries.item);
                 if (++this.matches >= query.length) {
                   throw BreakException;
                 }
@@ -153,35 +154,33 @@
         }
       },
 
-      _match(node, query, toHide, nextQuery) {
+      _match(node, query, toHide, subQueries) {
         let found;
-        let items = [];
         try {
           query.forEach( (q) => {
             found = true;
-            q.forEach( (kv) => {
+            q.forEach( (search) => {
               try {
-                let obj = this._getNestedObject(node, kv[0]);
-                if (typeof obj != 'string' || obj.length == 0 || obj.toLowerCase() !== String(kv[1]).toLowerCase()) {
+                let obj = this._getNestedObject(node, search[0]);
+                if (typeof obj != 'string' || obj.length == 0 || obj.toLowerCase() !== String(search[1]).toLowerCase()) {
                     found = false;
                 } else {
-                  toHide.item = this._getNestedObject(node, kv[2] ? kv[2] : 'style');
-                  if (kv[3]) {
-                    items.push(kv[3])
+                  toHide.item = this._getNestedObject(node, search[2] ? search[2] : 'style');
+                  if (search[3]) {
+                    subQueries.item = search[3];
                   }
                 }
               } catch (e) {
                 found = false;
               }
             });
-            // if (found) {
-            //   throw BreakException;
-            // }
+            if (found) {
+              throw BreakException;
+            }
           });
         } catch (e) {
           // PASS
         }
-        nextQuery.items = items.length > 0 ? items : null;
         return found;
       },
 
