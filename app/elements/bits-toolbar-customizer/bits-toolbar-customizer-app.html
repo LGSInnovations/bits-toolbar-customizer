@@ -362,7 +362,6 @@
         if (homeItemQueries.length > 0) {
           queries.ownerDocument.push(QUERY_DEFS.getOptimizedHomeItemsQuery(homeItemQueries));
         }
-        console.log(JSON.stringify(queries, null, 2));
         this.sendRequest(REQUESTS.SET_CUSTOMIZATIONS, {queries, hiddenProps});
         if (this._propUnhidden) {
           this.$.toast.open();
