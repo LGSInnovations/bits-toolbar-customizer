@@ -21,11 +21,11 @@ Use this module to customize the BITS UI in two ways:
 
 ### Add Widgets to the Toolbar
 
-Add custom widgets in `app/elements/bits-toolbar-customizer/bits-toolbar-customizer.html`. Replace the sample `<paper-icon-button>` element with markup that implements your widget. Set the desired icon, add widget listeners, etc. Any contributed widget icons will appear on the right-side of the BITS toolbar.
+Add custom widgets in `app/elements/bits-toolbar-customizer/bits-toolbar-customizer.html`. Replace the sample `<paper-icon-button>` element with markup that implements your widget. Set the desired icon, add widget listeners, etc. Icons for any contributed widget will appear on the right-side of the BITS toolbar.
 
 ### Hide Selected BITS UI Framework Items
  
-Launch the BITS server and navigate to `https://your-host:9001/bits-toolbar-customizer` (or select the `Toolbar Customizer` module from the msin BITS sidebar). Specify items to be hidden and click `Save Changes`. Items will be hidden immediately, but when you unhide items you must refresh the page (or navigate to a different page) for the items to appear again. Your customizations will persist throughout the session and across BITS server re-starts.
+Launch the BITS server and navigate to `https://localhost:9001/bits-toolbar-customizer` (or select the `Toolbar Customizer` module from the main BITS sidebar). Specify items to be hidden and click `Save Changes`. Items will be hidden immediately, but when you unhide items you must refresh the page (or navigate to a different page) for the items to appear again. Your customizations will persist throughout the session and across BITS server re-starts.
 
 ## Notes
 
@@ -33,8 +33,8 @@ Launch the BITS server and navigate to `https://your-host:9001/bits-toolbar-cust
 * To prevent users from changing the customizations in a production environment, remove the entries from this module's `module.json` file that have the following keys: `contentElement`, `contentImport`, and `displayName`. The module will continue to apply the customizations specified in the `customizations.json` file, but the module's UI will not be exposed.
 * The implementation of the capability for hiding UI framework items is not ideal. Unless and until the BITS framework explicitly supports customization, the only two options are: 1) Modify the BITS codebase and mantain a separate baseline, or 2) Provide a capabilty to find selected items in the rendered DOM, and hide them. This module takes the latter approach, which has several implications.
 
-  * The implementation is theoretically brittle, and may break with future BITS versions.
-  * The hiding of UI elements is sometimes noticeable. The hidden element appears for an instant and then disappears.
+  * This "screen scrape" implementation is theoretically brittle, and may break with future BITS versions.
+  * The hiding of UI elements is sometimes noticeable. The hidden element appears for an instant when the page is loaded, and then disappears.
   * When specific items from the `Home` sidebar are hidden, they are not hidden after clicking the `Home` link from the main sidebar until the page is refreshed. They are hidden immediately if you navigate directly to the `/home` route. This will hopefully be corrected in a future verison of the module.
 
 
