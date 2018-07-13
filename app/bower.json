@@ -23,6 +23,7 @@
     "paper-tabs": "^2.1.1",
     "iron-flex-layout": "^2.0.3",
     "paper-checkbox": "^2.0.4",
-    "paper-button": "^2.1.1"
+    "paper-button": "^2.1.1",
+    "paper-toast": "^2.1.2"
   }
 }

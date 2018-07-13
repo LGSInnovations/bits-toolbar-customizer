@@ -5,6 +5,7 @@
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 
 <!-- import global object TOOLBAR_CUSTOMIZER with query definitions-->
 <script type="text/javascript" src="./bits-toolbar-customizer-constants.js"></script>
@@ -31,7 +32,7 @@
       }
 
       paper-checkbox.spacer {
-        margin: 0 5px;
+        margin: 0 5px 10px;
       }
 
       paper-checkbox {
@@ -72,7 +73,7 @@
       }
 
       paper-button.custom:hover {
-        background-color: var(--paper-blue-100);
+        background-color: var(--paper-blue-900);
       }
 
       paper-button {
@@ -101,7 +102,7 @@
       }
 
       label.section-header {
-        margin: 20px 5px;
+        margin: 10px 5px 10px;
         font-size: 1.5em;
         color: #0033cc;
       }
@@ -115,11 +116,19 @@
         width: 1200px;
       }
 
+      paper-toast {
+        --paper-toast-background-color: #4285f4;
+        --paper-toast-color: #ffffff;
+        border-radius: 13px;
+      }
+
     </style>
 
     <app-toolbar class="tabs-bar">
       <div main-title>BITS Toolbar Customizer</div>
     </app-toolbar>
+
+    <paper-toast vertical-align="bottom" vertical-offset=80 id="toast" text="Refresh the page to show items no longer being hidden" duration="5000"></paper-toast>
 
   <div class="layout vertical container">
     <label class="section-header">Hide the following toolbar items</label>
@@ -212,7 +221,6 @@
       <paper-button raised disabled$="[[!_isSavePending(hiddenProps, propChanged)]]" class="custom" on-tap='_onSaveChanges'>Save Changes</paper-button>
     </div>
   </div>
-
   </template>
   <script>
   ((global) => {
@@ -356,13 +364,13 @@
         }
         console.log(JSON.stringify(queries, null, 2));
         this.sendRequest(REQUESTS.SET_CUSTOMIZATIONS, {queries, hiddenProps});
+        if (this._propUnhidden) {
+          this.$.toast.open();
+        }
       },
 
       _isSavePending: function(hiddenProps, propChanged) {
-        if (!hiddenProps) {
-          console.log('HIDDEN PROPS IS NULL');
-        }
-        console.log(`hiddenProps ${JSON.stringify(hiddenProps)}`);
+        this._propUnhidden = false;
         let res = false;
         const BreakException = {};
         try {
@@ -375,6 +383,7 @@
             } else {
               if (hiddenProps && hiddenProps.indexOf(prop) >= 0) {
                 res = true;
+                this._propUnhidden = true;
                 throw BreakException;
               }
             }

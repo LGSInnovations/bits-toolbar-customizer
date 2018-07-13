@@ -38,6 +38,8 @@
 
     const REQUESTS = TOOLBAR_CUSTOMIZER.REQUESTS;
 
+    const EVENTS = TOOLBAR_CUSTOMIZER.EVENTS;
+
     Polymer({
 
       is: 'bits-toolbar-customizer',
@@ -58,41 +60,49 @@
       ready: function() {
         // It turns out, the element is not really ready when ready is called
         const poll = setInterval( () => {
-          if (this.parentElement) {
+          if (this.parentElement && typeof this._queries != 'undefined') {
             clearTimeout(poll);
-            const toolbar = this._findToolbar(this.parentElement);
-            this.sendRequest(REQUESTS.GET_CUSTOMIZATIONS)
-            .then ((data) => {
-              let queries = data.queries;
-              if (queries && queries.toolbar) {
-                queries.toolbar.forEach( (query) => {
-                  this._deepSearch(toolbar, [query],
-                    (node, toHide) => {
-                      toHide.display = 'none';
-                    }
-                  );
-                });
-
-              }
-              if (queries && queries.ownerDocument) {
-                this._deepSearch(this.ownerDocument, queries.ownerDocument,
-                  (node, toHide, subQueries) => {
-                    if (subQueries) {
-                      subQueries.forEach( (search) => {
-                        this._deepSearch(node, [[search]],
-                        (node, toHide) => {
-                          toHide.display = 'none';
-                        });
-                      });
-                    } else {
-                      toHide.display = 'none';
-                    }
-                  }
-                );
-              }
-            });
+            this._setCustomizations(this.parentElement);
           }
-        }, 10)
+        }, 500);
+
+        this.sendRequest(REQUESTS.GET_CUSTOMIZATIONS)
+        .then ( (data) => {
+          this._queries = data.queries;
+        });
+        this.addSocketEventListener(EVENTS.UPDATE_CUSTOMIZATIONS, this._onUpdateCustomizations.bind(this));
+      },
+
+      _setCustomizations(parentElement) {
+        if (!this._toolbar) {
+          this._toolbar = this._findToolbar(parentElement);
+        }
+        if (this._queries && this._queries.toolbar) {
+          this._queries.toolbar.forEach( (query) => {
+            this._deepSearch(this._toolbar, [query],
+              (node, toHide) => {
+                toHide.display = 'none';
+              }
+            );
+          });
+
+        }
+        if (this._queries && this._queries.ownerDocument) {
+          this._deepSearch(this.ownerDocument, this._queries.ownerDocument,
+            (node, toHide, subQueries) => {
+              if (subQueries) {
+                subQueries.forEach( (search) => {
+                  this._deepSearch(node, [[search]],
+                  (node, toHide) => {
+                    toHide.display = 'none';
+                  });
+                });
+              } else {
+                toHide.display = 'none';
+              }
+            }
+          );
+        }
       },
 
       _findToolbar(parent) {
@@ -186,6 +196,11 @@
 
       _getNestedObject (object, path) {
         return path.split('.').reduce( (accum, value) => accum[value], object);
+      },
+
+      _onUpdateCustomizations(data) {
+        this._queries = data.queries;
+        this._setCustomizations(this.parentElement);
       }
     });
 
