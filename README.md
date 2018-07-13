@@ -1,7 +1,8 @@
 # Bits Toolbar Customizer
-===
+
+--- 
 Contribute custom toolbar widgets and hide existing toolbar or sidebar items.
-===
+---
 ## Install and Build
 
 For the following, assume the bits server is installed at `/opt/bits` and your bits modules are in `/opt/bits-modules`.
@@ -15,7 +16,7 @@ bower install
 cd /opt/bits/data/base/modules/modules
 ln -s /opt/bits-modules/bits-toolbar-customizer
 ```
-===
+---
 ## Usage
 
 Use this module to customize the BITS UI in two ways:
@@ -25,9 +26,10 @@ Use this module to customize the BITS UI in two ways:
 Add custom widgets in `app/elements/bits-toolbar-customizer/bits-toolbar-customizer.html`. Replace the sample <paper-icon-button> element with markup that implements your widget. Set the desired icon and add widget listeners, etc. The widget icon will appear on the right-side of the BITS toolbar.
 
 ### Hide Selected Items in the BITS UI Framework
-
+ 
 Launch the BITS server and navigate to `https://your-host:9001/bits-toolbar-customizer` (or select the `Toolbar Customizer` module from the BITS gallery sidebar). Specify items to be hidden and click `Save Changes`. Items will be hidden immediately, but when you unhide items you must refresh the page (or navigate to a different page) for the items to appear again. Your customizations will persist throughout the session and across BITS server re-starts.
-===
+
+---
 ### Notes
 
 * The customizations you specify are saved as json text in the file `customizations.json` in the data directory for this module (default `/bits/installation/dir/data/bits-toolbar-customizer`). In a production environment, you may want to retain a copy of this file and provide some means for restoring it in the event the module data directory is deleted or purged.
