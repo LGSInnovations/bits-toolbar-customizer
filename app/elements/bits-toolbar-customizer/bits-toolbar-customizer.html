@@ -80,8 +80,9 @@
         if (this._queries && this._queries.toolbar) {
           this._queries.toolbar.forEach( (query) => {
             this._deepSearch(this._toolbar, [query],
-              (node, toHide) => {
-                toHide.display = 'none';
+              (node, toSet) => {
+                const assign = toSet[1].split('=');
+                toSet[0][assign[0]] = assign[1];
               }
             );
           });
@@ -89,16 +90,18 @@
         }
         if (this._queries && this._queries.ownerDocument) {
           this._deepSearch(this.ownerDocument, this._queries.ownerDocument,
-            (node, toHide, subQueries) => {
+            (node, toSet, subQueries) => {
               if (subQueries) {
                 subQueries.forEach( (search) => {
                   this._deepSearch(node, [[search]],
-                  (node, toHide) => {
-                    toHide.display = 'none';
+                  (node, toSet) => {
+                    const assign = toSet[1].split('=');
+                    toSet[0][assign[0]] = assign[1];
                   });
                 });
               } else {
-                toHide.display = 'none';
+                const assign = toSet[1].split('=');
+                toSet[0][assign[0]] = assign[1];
               }
             }
           );
@@ -123,19 +126,19 @@
       _deepSearch(parent, query, cb) {
         try {
           this.count++;
-          let toHide = {};
+          let toSet = {};
           let subQueries = {};
-          if (this._match(parent, query, toHide, subQueries)) {
-            cb(parent, toHide.item, subQueries.item);
+          if (this._match(parent, query, toSet, subQueries)) {
+            cb(parent, toSet.items, subQueries.items);
             if (++this.matches >= query.length) {
               throw BreakException;
             }
           }
           parent.childNodes.forEach( (node) => {
-            let toHide = {};
+            let toSet = {};
             let subQueries = {};
-            if (this._match(node, query, toHide, subQueries)) {
-              cb(node, toHide.item, subQueries.item)
+            if (this._match(node, query, toSet, subQueries)) {
+              cb(node, toSet.items, subQueries.items)
               if (++this.matches >= query.length) {
                 throw BreakException;
               }
@@ -145,10 +148,10 @@
           });
           if (parent.shadowRoot) {
             parent.shadowRoot.childNodes.forEach( (node) => {
-              let toHide = {};
+              let toSet = {};
               let subQueries = {};
-              if (this._match(node, query, toHide, subQueries)) {
-                cb(node, toHide.item, subQueries.item);
+              if (this._match(node, query, toSet, subQueries)) {
+                cb(node, toSet.items, subQueries.items);
                 if (++this.matches >= query.length) {
                   throw BreakException;
                 }
@@ -164,7 +167,7 @@
         }
       },
 
-      _match(node, query, toHide, subQueries) {
+      _match(node, query, toSet, subQueries) {
         let found;
         try {
           query.forEach( (q) => {
@@ -175,9 +178,12 @@
                 if (typeof obj != 'string' || obj.length == 0 || obj.toLowerCase() !== String(search[1]).toLowerCase()) {
                     found = false;
                 } else {
-                  toHide.item = this._getNestedObject(node, search[2] ? search[2] : 'style');
+                  toSet.items = [
+                    this._getNestedObject(node, search[2] ? search[2][0] : 'style'),
+                    search[2] ? search[2][1] : 'display=none'
+                  ];
                   if (search[3]) {
-                    subQueries.item = search[3];
+                    subQueries.items = search[3];
                   }
                 }
               } catch (e) {

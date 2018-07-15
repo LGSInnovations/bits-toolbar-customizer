@@ -135,7 +135,11 @@
     homeLink: {
       query: [
         ['textContent', 'Home', 'parentNode.parentNode.host.style'],
-        ['parentNode.parentNode.host.tagName', 'base-gallery-category', 'parentNode.parentNode.host.style']
+        [
+          'parentNode.parentNode.host.tagName',
+          'base-gallery-category',
+          ['parentNode.parentNode.host.style', 'display=none']
+        ]
       ],
       target: 'ownerDocument'
     },
@@ -156,7 +160,11 @@
       query: [
         [ 'tagName', 'base-home', null,
           [
-            ['textContent', 'Dashboard', 'parentNode.style']
+            [
+              'textContent',
+              'Dashboard',
+              ['parentNode.style', 'display=none']
+            ]
           ]
         ]
       ],
@@ -167,7 +175,11 @@
       query: [
         [ 'tagName', 'base-home', null,
           [
-            ['textContent', 'Activity', 'parentNode.style']
+            [
+              'textContent',
+              'Activity',
+              ['parentNode.style', 'display=none']
+            ]
           ]
         ]
       ],
@@ -178,7 +190,11 @@
       query: [
         [ 'tagName', 'base-home', null,
           [
-            ['textContent', 'Users', 'parentNode.style']
+            [
+              'textContent',
+              'Users',
+              ['parentNode.style', 'display=none']
+            ]
           ]
         ]
       ],
@@ -189,7 +205,11 @@
       query: [
         [ 'tagName', 'base-home', null,
           [
-            ['textContent', 'OMGs', 'parentNode.style']
+            [
+              'textContent',
+              'OMGs',
+              ['parentNode.style', 'display=none']
+            ]
           ]
         ]
       ],
@@ -200,7 +220,11 @@
       query: [
         [ 'tagName', 'base-home', null,
           [
-            ['textContent', 'Modules', 'parentNode.style']
+            [
+              'textContent',
+              'Modules',
+              ['parentNode.style', 'display=none']
+            ]
           ]
         ]
       ],
@@ -211,7 +235,11 @@
       query: [
         [ 'tagName', 'base-home', null,
           [
-            ['textContent', 'Logs', 'parentNode.style']
+            [
+              'textContent',
+              'Logs',
+              ['parentNode.style', 'display=none']
+            ]
           ]
         ]
       ],
