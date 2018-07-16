@@ -104,8 +104,8 @@
     // Stack icon on left side of toolbar, defined in base-toolbar.html
     gallery: {
       query: [
-        {key: 'id', value: 'gallery', setter: null},
-        {key: 'tagName', value: 'paper-icon-button', setter: null}
+        {key: 'id', value: 'gallery'},
+        {key: 'tagName', value: 'paper-icon-button'}
       ],
       target: 'toolbar'
     },
@@ -113,8 +113,8 @@
     // BITS label in toolbar next to gallery, defined in base-toolbar.html
     logo: {
       query: [
-        {key: 'textContent', value: 'BITS', setter: null},
-        {key : 'parentNode.parentNode.tagName', value: 'app-toolbar', setter: null}
+        {key: 'textContent', value: 'BITS'},
+        {key : 'parentNode.parentNode.tagName', value: 'app-toolbar'}
       ],
       target: 'toolbar'
     },
@@ -122,8 +122,8 @@
     // Power menu items, defined in 'base-system-power-control.html'
     powerMenu: {
       query: [
-        {key: 'id', value: 'menu', setter: null},
-        {key: 'parentNode.host.tagName', value: 'base-system-power-control', setter: null}
+        {key: 'id', value: 'menu'},
+        {key: 'parentNode.host.tagName', value: 'base-system-power-control'}
       ],
       target: 'toolbar'
     },
@@ -131,8 +131,8 @@
     // Power menu item defined in 'base-system-power-control.html'
     powerOff: {
       query: [
-        {key: 'tagName', value: 'paper-item', setter: null},
-        {key: 'textContent', value: 'Power off', setter: null}
+        {key: 'tagName', value: 'paper-item'},
+        {key: 'textContent', value: 'Power off'}
       ],
       target: 'toolbar'
     },
@@ -140,8 +140,8 @@
     // Power menu item defined in 'base-system-power-control.html'
     reboot: {
         query: [
-        {key: 'tagName', value: 'paper-item', setter: null},
-        {key: 'textContent', value: 'Reboot', setter: null}
+        {key: 'tagName', value: 'paper-item'},
+        {key: 'textContent', value: 'Reboot'}
       ],
       target: 'toolbar'
     },
@@ -149,8 +149,8 @@
     // Power menu item defined in 'base-system-power-control.html'
     signOut: {
       query: [
-        {key:'tagName', value: 'paper-item', setter: null},
-        {key: 'textContent', value: 'Sign out', setter: null}
+        {key:'tagName', value: 'paper-item'},
+        {key: 'textContent', value: 'Sign out'}
       ],
       target: 'toolbar'
     },
@@ -158,7 +158,7 @@
     /* The Home sidebar (displayed at server route /home). Defined in base-home.html. */
     homeSidebar: {
       query: [
-        {key: 'tagName', value: 'base-home', setter: null}
+        {key: 'tagName', value: 'base-home'}
       ],
       target: 'ownerDocument'
     },
@@ -314,6 +314,12 @@
       target: 'ownerDocument'
     },
 
+    /**
+    * When hiding multile home sidebar items, there will be multiple queries with
+    * <base-home> as the target, each with a different subquery for the item to
+    * be hidden. This function combines them into a single query with <base-home>
+    * as the target and an array of subqueries for the items to be hidden.
+    */
     getOptimizedHomeItemsQuery: function(queries) {
       const query = queries.shift();
       return queries.reduce( (accum, val, idx, arr) => {
@@ -333,14 +339,46 @@
     UPDATE_CUSTOMIZATIONS: PREFIX + "update customizations"
   }
 
+  /**
+  * The "show" and "hide" wrapper functions mutate the queries to be "show" or
+  * "hide" queries, respectively. Wec lone them to avoid mutating the base instance
+  * of each query.
+  */
+  const cloneSearch = function(search) {
+    const search_copy = {key: search.key, value: search.value};
+    if ('setter' in search) {
+      search_copy.setter = Object.assign({}, search.setter);
+    }
+    if (search.subquery) {
+      search_copy.subquery = [];
+      search.subquery.forEach( (_search) => {
+        search_copy.subquery.push(cloneSearch(_search))
+      });
+    }
+    return search_copy
+  }
+
+  const cloneQuery = function(query) {
+    const query_copy = {query: [], target: query.target};
+    query.query.forEach( (search) => {
+      query_copy.query.push(cloneSearch(search));
+    });
+    return query_copy;
+  }
+
+  /**
+  * A wrapper function which mutates a query to be a "show" query. "Show" queries
+  * enable us to immediately un-hide an item without refreshing the page.
+  */
   const show = function(query) {
+    query = cloneQuery(query);
     query.query.forEach( (_query) => {
       if ('setter' in _query) {
-        if (_query.setter == null) {
-          _query.setter = {path: "style", node: "display", value: "inline"};
-        } else if (_query.setter.node === 'display') {
+        if (_query.setter.node === 'display') {
           _query.setter.value = 'inline';
         }
+      } else {
+        _query.setter = {path: 'style', node: 'display', value: 'inline'}
       }
       if (_query.subquery) {
         _query.subquery.forEach( (_subquery) => {
@@ -355,7 +393,11 @@
     return query;
   }
 
+  /**
+  * A wrapper function which mutates a query to be a "hide" query.
+  */
   const hide = function(query) {
+    query = cloneQuery(query);
     query.query.forEach( (_query) => {
       if ('setter' in _query && _query.setter != null) {
         if (_query.setter.node === 'display') {
