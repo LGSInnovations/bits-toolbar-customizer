@@ -25,7 +25,7 @@ Add custom widgets in `app/elements/bits-toolbar-customizer/bits-toolbar-customi
 
 ### Hide Selected BITS UI Framework Items
  
-Launch the BITS server and navigate to `https://localhost:9001/bits-toolbar-customizer` (or select the `Toolbar Customizer` module from the main BITS sidebar). Specify items to be hidden and click `Save Changes`. Items will be hidden immediately, but when you unhide items you must refresh the page (or navigate to a different page) for the items to appear again. Your customizations will persist throughout the session and across BITS server re-starts.
+Launch the BITS server and navigate to `https://localhost:9001/bits-toolbar-customizer` (or select the `Toolbar Customizer` module from the main BITS sidebar). Select items to be hidden os de-select previously-hidden items to be shown, and click `Save Changes`. Items will be hidden or shown immediately, except for Home sidebar items (which require a page reload as described below). Your customizations will persist throughout the session and across BITS server re-starts.
 
 ## Notes
 
