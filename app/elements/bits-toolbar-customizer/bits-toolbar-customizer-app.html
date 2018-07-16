@@ -8,7 +8,7 @@
 <link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 
 <!-- import global object TOOLBAR_CUSTOMIZER with query definitions-->
-<script type="text/javascript" src="./bits-toolbar-customizer-constants.js"></script>
+<script type="text/javascript" src="./bits-toolbar-customizer-queries.js"></script>
 
 <dom-module id="bits-toolbar-customizer-app">
   <template>
@@ -134,21 +134,21 @@
     <label class="section-header">Hide the following toolbar items</label>
 
     <div class="layout horizontal start-justified">
-      <paper-checkbox class="spacer" checked={{gallery::change}}>
+      <paper-checkbox class="spacer" checked={{gallery::change}} on-tap="_selectProp" data-args$='gallery'>
         <span class="title">GALLERY</span>
         <span class="subtitle">
           Button to open the sidebar (stack icon)
         </span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{logo::change}}>
+      <paper-checkbox class="spacer" checked={{logo::change}} on-tap="_selectProp" data-args$='logo'>
         <span class="title">BITS LOGO</span>
         <span class="subtitle">
           BITS Logo (Rendered as "BITS" or stack icon)
         </span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{powerMenu::change}}>
+      <paper-checkbox class="spacer" checked={{powerMenu::change}} on-tap="_selectProp" data-args$='powerMenu'>
         <span class="title">POWER MENU</span>
         <span class="subtitle">
           Menu with system controls
@@ -158,21 +158,21 @@
 
     <label class="section-header" disabled$=[[powerMenu]]>Hide the following power menu items</label>
     <div class="layout horizontal start-justified">
-      <paper-checkbox class="spacer" checked={{powerOff::change}} disabled=[[powerMenu]]>
+      <paper-checkbox class="spacer" checked={{powerOff::change}} disabled=[[powerMenu]] on-tap="_selectProp" data-args$='powerOff'>
         <span class="title">POWER OFF</span>
         <span class="subtitle">
           Power off server host
         </span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{reboot::change}} disabled=[[powerMenu]]>
+      <paper-checkbox class="spacer" checked={{reboot::change}} disabled=[[powerMenu]] on-tap="_selectProp" data-args$='reboot'>
         <span class="title">REBOOT</span>
         <span class="subtitle">
           Reboot server host
         </span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{signOut::change}} disabled=[[powerMenu]]>
+      <paper-checkbox class="spacer" checked={{signOut::change}} disabled=[[powerMenu]] on-tap="_selectProp" data-args$='signOut'>
         <span class="title">SIGN OUT</span>
         <span class="subtitle">
           Sign out of BITS
@@ -182,7 +182,7 @@
 
     <label class="section-header">Hide the following Sidebar item</label>
     <div class="layout horizontal start-justified">
-      <paper-checkbox class="spacer" checked={{homeSidebar::change}}>
+      <paper-checkbox class="spacer" checked={{homeSidebar::change}} on-tap="_selectProp" data-args$='homeLink'>
         <span class="title">HOME</span>
         <span class="subtitle">
           The /home page route and sidebar link to it
@@ -192,27 +192,27 @@
 
     <label class="section-header" disabled$=[[homeSidebar]]>Hide the following Home Sidebar items</label>
     <div class="layout horizontal start-justified">
-      <paper-checkbox class="spacer" checked={{dashboard::change}} disabled=[[homeSidebar]]>
-        <span class="title">Dashboard</span>
+      <paper-checkbox class="spacer" checked={{dashboard::change}} disabled=[[homeSidebar]] on-tap="_selectProp" id$='dashboard'>
+        <span id="dashboard" class="title">Dashboard</span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{activity::change}} disabled=[[homeSidebar]]>
+      <paper-checkbox class="spacer" checked={{activity::change}} disabled=[[homeSidebar]] on-tap="_selectProp" data-args$='activity'>
         <span class="title">Activity</span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{users::change}} disabled=[[homeSidebar]]>
+      <paper-checkbox class="spacer" checked={{users::change}} disabled=[[homeSidebar]] on-tap="_selectProp" data-args$='users'>
         <span class="title">Users</span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{omgs::change}} disabled=[[homeSidebar]]>
+      <paper-checkbox class="spacer" checked={{omgs::change}} disabled=[[homeSidebar]] on-tap="_selectProp" data-args$='omgs'>
         <span class="title">OMGs</span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{modules::change}} disabled=[[homeSidebar]]>
+      <paper-checkbox class="spacer" checked={{modules::change}} disabled=[[homeSidebar]] on-tap="_selectProp" data-args$='modules'>
         <span class="title">Modules</span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{logs::change}} disabled=[[homeSidebar]]>
+      <paper-checkbox class="spacer" checked={{logs::change}} disabled=[[homeSidebar]] on-tap="_selectProp" data-args$='logs'>
         <span class="title">Logs</span>
       </paper-checkbox>
     </div>
@@ -233,6 +233,10 @@
     const REQUESTS = TOOLBAR_CUSTOMIZER.REQUESTS;
 
     const EVENTS = TOOLBAR_CUSTOMIZER.EVENTS;
+
+    const show = TOOLBAR_CUSTOMIZER.show;
+
+    const hide = TOOLBAR_CUSTOMIZER.hide;
 
     const hidableProp = function(prop) {
       return prop != 'hiddenProps' && prop != 'propChanged'
@@ -348,7 +352,7 @@
         Object.keys(this.properties).forEach( (prop) => {
           if (hidableProp(prop) && typeof this[prop] != 'undefined' && this[prop]) {
             hiddenProps.push(prop);
-            const queryDef = QUERY_DEFS[prop]
+            const queryDef = hide(QUERY_DEFS[prop]);
             if (queryDef.target == 'ownerDocument' && !prop.startsWith('home')) {
               homeItemQueries.push(queryDef.query);
             } else {
@@ -362,41 +366,50 @@
         if (homeItemQueries.length > 0) {
           queries.ownerDocument.push(QUERY_DEFS.getOptimizedHomeItemsQuery(homeItemQueries));
         }
-        this.sendRequest(REQUESTS.SET_CUSTOMIZATIONS, {queries, hiddenProps});
-        if (this._propUnhidden) {
-          this.$.toast.open();
+        this.sendRequest(REQUESTS.SET_CUSTOMIZATIONS, {queries, hiddenProps, hide: true});
+        if (this._propsToShow.toolbar.length > 0 || this._propsToShow.ownerDocument.length > 0) {
+          this.sendRequest(REQUESTS.SET_CUSTOMIZATIONS, {queries: this._propsToShow, hiddenProps, hide: false});
         }
       },
 
       _isSavePending: function(hiddenProps, propChanged) {
-        this._propUnhidden = false;
+        // this._propsToShow = {toolbar: [], ownerDocument: []};
         let res = false;
         const BreakException = {};
-        try {
-          Object.keys(this.properties).forEach( (prop) => {
-            if (hidableProp(prop) && typeof this[prop] != undefined && this[prop]) {
-              if (hiddenProps && hiddenProps.indexOf(prop) < 0) {
-                res = true;
-                throw BreakException;
-              }
-            } else {
-              if (hiddenProps && hiddenProps.indexOf(prop) >= 0) {
-                res = true;
-                this._propUnhidden = true;
-                throw BreakException;
-              }
+        Object.keys(this.properties).forEach( (prop) => {
+          if (hidableProp(prop) && typeof this[prop] != undefined && this[prop]) {
+            if (hiddenProps && hiddenProps.indexOf(prop) < 0) {
+              res = true;
             }
-          });
-        } catch (e) {
-          if (e !== BreakException) {
-            throw e;
           }
-        }
+          // else {
+          //   if (hiddenProps && hiddenProps.indexOf(prop) >= 0) {
+          //     res = true;
+          //     const query = show(QUERY_DEFS[prop]);
+          //     this._propsToShow[query.target].push(query.query);
+          //   }
+          // }
+        });
         return res;
       },
 
-      _onPropChanged() {
+      _onPropChanged(prop) {
         this.propChanged = 1 - this.propChanged;
+      },
+
+      _selectProp(e) {
+        // var propName = e.target.dataset.data-args;
+        var path = Polymer.dom(e).path[1];
+        var path2 = Polymer.dom(e).path[2];
+        var propName = Polymer.dom(e).path[1].getAttribute('data-args')
+        var propName = e.target.id;
+        const query = show(QUERY_DEFS[propName]);
+        const targetList = this._propsToShow[query.target];
+        if (!prop) {
+          targetList.push(query.query);
+        } else {
+            targetList.splice(targetList.indexOf(query.query), 1);
+        }
       },
 
       _onUpdateCustomizations(data) {

@@ -25,10 +25,13 @@
     }
 
     setCustomizations(data) {
-      this._customizations = data.queries;
-      this._hiddenProps = data.hiddenProps;
+      console.log(JSON.stringify(data, null, 2));
       this._messageCenter.sendEvent(EVENTS.UPDATE_CUSTOMIZATIONS, SCOPES, data);
-      this.dumpCustomizations(data);
+      if (data.hide) {
+        this._customizations = data.queries;
+        this._hiddenProps = data.hiddenProps;
+        this.dumpCustomizations(data);
+      }
     }
 
     dumpCustomizations(data) {
