@@ -3,7 +3,7 @@
 
   const BitsToolbarCustomizerMessenger = require('./bits-toolbar-customizer-messenger');
 
-  const {EVENTS} = require('./bits-toolbar-customizer-constants');
+  const {EVENTS} = require('./bits-toolbar-customizer-queries');
 
   const path = require('path');
 
@@ -25,10 +25,13 @@
     }
 
     setCustomizations(data) {
-      this._customizations = data.queries;
-      this._hiddenProps = data.hiddenProps;
       this._messageCenter.sendEvent(EVENTS.UPDATE_CUSTOMIZATIONS, SCOPES, data);
-      this.dumpCustomizations(data);
+      // Send "show" and "hide" queries to client, but only persist "hide" queries
+      if (data.action === 'hide') {
+        this._customizations = data.queries;
+        this._hiddenProps = data.hiddenProps;
+        this.dumpCustomizations(data);
+      }
     }
 
     dumpCustomizations(data) {

@@ -3,7 +3,7 @@
 
   const SCOPES = {scopes: ['public']};
   const Messenger = global.helper.Messenger;
-  const {REQUESTS} = require('./bits-toolbar-customizer-constants');
+  const {REQUESTS} = require('./bits-toolbar-customizer-queries');
 
   class BitsToolbarCustomizerMessenger extends Messenger {
     constructor(manager) {

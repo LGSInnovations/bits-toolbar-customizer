@@ -6,7 +6,7 @@
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
 
 <!-- import global object TOOLBAR_CUSTOMIZER with query definitions-->
-<script type="text/javascript" src="./bits-toolbar-customizer-constants.js"></script>
+<script type="text/javascript" src="./bits-toolbar-customizer-queries.js"></script>
 
 <dom-module id="bits-toolbar-customizer">
   <template>
@@ -80,8 +80,8 @@
         if (this._queries && this._queries.toolbar) {
           this._queries.toolbar.forEach( (query) => {
             this._deepSearch(this._toolbar, [query],
-              (node, toHide) => {
-                toHide.display = 'none';
+              (setter) => {
+                setter.baseObj[setter.node] = setter.value;
               }
             );
           });
@@ -89,16 +89,16 @@
         }
         if (this._queries && this._queries.ownerDocument) {
           this._deepSearch(this.ownerDocument, this._queries.ownerDocument,
-            (node, toHide, subQueries) => {
+            (setter, subQueries, node) => {
               if (subQueries) {
                 subQueries.forEach( (search) => {
                   this._deepSearch(node, [[search]],
-                  (node, toHide) => {
-                    toHide.display = 'none';
+                  (setter) => {
+                    setter.baseObj[setter.node] = setter.value;
                   });
                 });
               } else {
-                toHide.display = 'none';
+                setter.baseObj[setter.node] = setter.value;
               }
             }
           );
@@ -123,19 +123,19 @@
       _deepSearch(parent, query, cb) {
         try {
           this.count++;
-          let toHide = {};
+          let setter = {};
           let subQueries = {};
-          if (this._match(parent, query, toHide, subQueries)) {
-            cb(parent, toHide.item, subQueries.item);
+          if (this._match(parent, query, setter, subQueries)) {
+            cb(setter.setter, subQueries.items, parent);
             if (++this.matches >= query.length) {
               throw BreakException;
             }
           }
           parent.childNodes.forEach( (node) => {
-            let toHide = {};
+            let setter = {};
             let subQueries = {};
-            if (this._match(node, query, toHide, subQueries)) {
-              cb(node, toHide.item, subQueries.item)
+            if (this._match(node, query, setter, subQueries)) {
+              cb(setter.setter, subQueries.items, node)
               if (++this.matches >= query.length) {
                 throw BreakException;
               }
@@ -145,10 +145,10 @@
           });
           if (parent.shadowRoot) {
             parent.shadowRoot.childNodes.forEach( (node) => {
-              let toHide = {};
+              let setter = {};
               let subQueries = {};
-              if (this._match(node, query, toHide, subQueries)) {
-                cb(node, toHide.item, subQueries.item);
+              if (this._match(node, query, setter, subQueries)) {
+                cb(setter.setter, subQueries.items, node);
                 if (++this.matches >= query.length) {
                   throw BreakException;
                 }
@@ -164,20 +164,24 @@
         }
       },
 
-      _match(node, query, toHide, subQueries) {
+      _match(node, query, setter, subQueries) {
         let found;
         try {
           query.forEach( (q) => {
             found = true;
             q.forEach( (search) => {
               try {
-                let obj = this._getNestedObject(node, search[0]);
-                if (typeof obj != 'string' || obj.length == 0 || obj.toLowerCase() !== String(search[1]).toLowerCase()) {
+                let obj = this._getNestedObject(node, search.key);
+                if (typeof obj != 'string' || obj.length == 0 || obj.toLowerCase() !== String(search.value).toLowerCase()) {
                     found = false;
                 } else {
-                  toHide.item = this._getNestedObject(node, search[2] ? search[2] : 'style');
-                  if (search[3]) {
-                    subQueries.item = search[3];
+                  setter.setter = {
+                    baseObj: this._getNestedObject(node, search.setter ? search.setter.path : 'style'),
+                    node: search.setter ? search.setter.node : 'display',
+                    value: search.setter ? search.setter.value : 'none',
+                  };
+                  if (search.subquery) {
+                    subQueries.items = search.subquery;
                   }
                 }
               } catch (e) {
