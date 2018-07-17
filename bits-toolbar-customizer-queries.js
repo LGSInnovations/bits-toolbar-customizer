@@ -156,15 +156,15 @@
     },
 
     /* The Home sidebar (displayed at server route /home). Defined in base-home.html. */
-    homeSidebar: {
+    homeLink: {
       query: [
-        {key: 'tagName', value: 'base-home'}
+          {key: 'tagName', value: 'base-home'}
       ],
       target: 'ownerDocument'
     },
 
     // The Home link in the sidebar. Defined in base-gallery.html.
-    homeLink: {
+    homeSidebar: {
       query: [
         {
           key: 'textContent',
@@ -314,13 +314,60 @@
       target: 'ownerDocument'
     },
 
+    toolbar: {
+      query: [
+          { key: 'id', value: 'toolbar'},
+          { key: 'tagName', value: 'base-toolbar'}
+      ],
+      target: 'ownerDocument'
+    },
+
+    toolbar2: {
+      query: [
+        { key: 'id', value: 'toolbar',
+          setter: {
+            path: 'parentElement.style',
+            node: 'display',
+            value: 'none'
+          }
+        },
+        { key: 'tagName', value: 'base-toolbar',
+          setter: {
+            path: 'parentElement.style',
+            node: 'display',
+            value: 'none'
+          }
+        }
+      ],
+      target: 'ownerDocument'
+    },
+
+    toolbar3: {
+      query: [
+        { key: 'id', value: 'toolbar',
+          setter: {
+            path: 'parentNode.parentNode',
+            call: 'resetLayout'
+          }
+        },
+        { key: 'tagName', value: 'base-toolbar',
+          setter: {
+            path: 'parentNode.parentNode',
+            call: 'resetLayout'
+          }
+        }
+      ],
+      target: 'ownerDocument'
+    },
+
+
     /**
     * When hiding multile home sidebar items, there will be multiple queries with
     * <base-home> as the target, each with a different subquery for the item to
     * be hidden. This function combines them into a single query with <base-home>
     * as the target and an array of subqueries for the items to be hidden.
     */
-    getOptimizedHomeItemsQuery: function(queries) {
+    getOptimizedQuery: function(queries) {
       const query = queries.shift();
       return queries.reduce( (accum, val, idx, arr) => {
           accum[0].subquery.push(val[0].subquery[0]);
@@ -359,10 +406,25 @@
   }
 
   const cloneQuery = function(query) {
-    const query_copy = {query: [], target: query.target};
-    query.query.forEach( (search) => {
-      query_copy.query.push(cloneSearch(search));
-    });
+    let query_copy;
+    // console.log(`before clone ${JSON.stringify(query, null, 2)}`)
+    if ('query' in query) {
+      query_copy = {query: [], target: query.target};
+      query.query.forEach( (search) => {
+        query_copy.query.push(cloneSearch(search));
+      });
+    } else {
+      query_copy = {queries: [], target: query.target};
+      let q = [];
+      query.queries.forEach( (query) => {
+        query.forEach( (search) => {
+          q.push(cloneSearch(search));
+        });
+        query_copy.queries.push(q)
+        q = [];
+      })
+    }
+    // console.log(`after clone ${JSON.stringify(query_copy, null, 2)}`)
     return query_copy;
   }
 
@@ -372,23 +434,26 @@
   */
   const show = function(query) {
     query = cloneQuery(query);
-    query.query.forEach( (_query) => {
-      if ('setter' in _query) {
-        if (_query.setter.node === 'display') {
-          _query.setter.value = 'inline';
-        }
-      } else {
-        _query.setter = {path: 'style', node: 'display', value: 'inline'}
-      }
-      if (_query.subquery) {
-        _query.subquery.forEach( (_subquery) => {
-          if ('setter' in _subquery) {
-            if (_subquery.setter.node === 'display') {
-              _subquery.setter.value = "inline";
-            }
+    const queries = query.query ? [query.query] : query.queries;
+    queries.forEach ( (q) => {
+      q.forEach( (_query) => {
+        if ('setter' in _query) {
+          if (_query.setter.node === 'display') {
+            _query.setter.value = 'inline';
           }
-        });
-      }
+        } else {
+          _query.setter = {path: 'style', node: 'display', value: 'inline'}
+        }
+        if (_query.subquery) {
+          _query.subquery.forEach( (_subquery) => {
+            if ('setter' in _subquery) {
+              if (_subquery.setter.node === 'display') {
+                _subquery.setter.value = "inline";
+              }
+            }
+          });
+        }
+      });
     });
     return query;
   }
@@ -398,21 +463,24 @@
   */
   const hide = function(query) {
     query = cloneQuery(query);
-    query.query.forEach( (_query) => {
-      if ('setter' in _query && _query.setter != null) {
-        if (_query.setter.node === 'display') {
-          _query.setter.value = 'none';
-        }
-      }
-      if (_query.subquery) {
-        _query.subquery.forEach( (_subquery) => {
-          if ('setter' in _subquery.setter) {
-            if (_subquery.setter.node === 'display') {
-              _subquery.setter.value = 'none';
-            }
+    const queries = query.query ? [query.query] : query.queries;
+    queries.forEach ( (q) => {
+      q.forEach( (_query) => {
+        if ('setter' in _query && _query.setter != null) {
+          if (_query.setter.node === 'display') {
+            _query.setter.value = 'none';
           }
-        });
-      }
+        }
+        if (_query.subquery) {
+          _query.subquery.forEach( (_subquery) => {
+            if ('setter' in _subquery.setter) {
+              if (_subquery.setter.node === 'display') {
+                _subquery.setter.value = 'none';
+              }
+            }
+          });
+        }
+      });
     });
     return query;
   }

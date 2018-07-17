@@ -131,24 +131,29 @@
     <paper-toast vertical-align="bottom" vertical-offset=80 id="toast" text="Refresh the page to show items no longer being hidden" duration="5000"></paper-toast>
 
   <div class="layout vertical container">
+    <div class="layout horizontal start-justified">
+      <paper-checkbox class="spacer" checked={{toolbar::change}} on-tap="_selectProp">
+        <span id='toolbar' class="title">Hide the BITS Toolbar</span>
+      </paper-checkbox>
+    </div>
     <label class="section-header">Hide the following toolbar items</label>
 
     <div class="layout horizontal start-justified">
-      <paper-checkbox class="spacer" checked={{gallery::change}} on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{gallery::change}} on-tap="_selectProp" disabled=[[toolbar]]>
         <span id='gallery' class="title">GALLERY</span>
         <span id='gallery' class="subtitle">
           Button to open the sidebar (stack icon)
         </span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{logo::change}} on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{logo::change}} on-tap="_selectProp" disabled=[[toolbar]]>
         <span id='logo' class="title">BITS LOGO</span>
         <span id='logo' class="subtitle">
           BITS Logo (Rendered as "BITS" or stack icon)
         </span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{powerMenu::change}} on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{powerMenu::change}} on-tap="_selectProp" disabled=[[toolbar]]>
         <span id='powerMenu' class="title">POWER MENU</span>
         <span id='powerMenu' class="subtitle">
           Menu with system controls
@@ -182,37 +187,37 @@
 
     <label class="section-header">Hide the following Sidebar item</label>
     <div class="layout horizontal start-justified">
-      <paper-checkbox class="spacer" checked={{homeSidebar::change}} on-tap="_selectProp">
-        <span id='homeSidebar' class="title">HOME</span>
-        <span id='homeSidebar' class="subtitle">
+      <paper-checkbox class="spacer" checked={{homeLink::change}} on-tap="_selectProp">
+        <span id='homeLink' class="title">HOME</span>
+        <span id='homeLink' class="subtitle">
           The /home page route and sidebar link to it
         </span>
       </paper-checkbox>
     </div>
 
-    <label class="section-header" disabled$=[[homeSidebar]]>Hide the following Home Sidebar items</label>
+    <label class="section-header" disabled$=[[homeLink]]>Hide the following Home Sidebar items</label>
     <div class="layout horizontal start-justified">
-      <paper-checkbox class="spacer" checked={{dashboard::change}} disabled=[[homeSidebar]] >
+      <paper-checkbox class="spacer" checked={{dashboard::change}} disabled=[[homeLink]] >
         <span on-tap="_selectProp" id="dashboard" class="title">Dashboard</span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{activity::change}} disabled=[[homeSidebar]] on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{activity::change}} disabled=[[homeLink]] on-tap="_selectProp">
         <span id='activity' class="title">Activity</span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{users::change}} disabled=[[homeSidebar]] on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{users::change}} disabled=[[homeLink]] on-tap="_selectProp">
         <span id='users' class="title">Users</span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{omgs::change}} disabled=[[homeSidebar]] on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{omgs::change}} disabled=[[homeLink]] on-tap="_selectProp">
         <span id='omgs' class="title">OMGs</span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{modules::change}} disabled=[[homeSidebar]] on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{modules::change}} disabled=[[homeLink]] on-tap="_selectProp">
         <span id='modules' class="title">Modules</span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{logs::change}} disabled=[[homeSidebar]] on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{logs::change}} disabled=[[homeLink]] on-tap="_selectProp">
         <span id='logs' class="title">Logs</span>
       </paper-checkbox>
     </div>
@@ -254,6 +259,11 @@
       behaviors: [global.Bits.BaseMessageCenterBehavior],
 
       properties: {
+        toolbar: {
+          type: Boolean,
+          notify: true,
+          observer: '_onPropChanged'
+        },
         gallery: {
           type: Boolean,
           notify: true,
@@ -284,7 +294,7 @@
           notify: true,
           observer: '_onPropChanged'
         },
-        homeSidebar: {
+        homeLink: {
           type: Boolean,
           notify: true,
           observer: '_onPropChanged'
@@ -357,18 +367,21 @@
           if (hidableProp(prop) && typeof this[prop] != 'undefined' && this[prop]) {
             hiddenProps.push(prop);
             const queryDef = hide(QUERY_DEFS[prop]);
-            if (queryDef.target == 'ownerDocument' && !prop.startsWith('home')) {
+            if (['dashboard', 'activity', 'users', 'omgs', 'modules', 'logs'].indexOf(prop) >= 0) {
               homeItemQueries.push(queryDef.query);
             } else {
               queries[queryDef.target].push(queryDef.query);
-            }
-            if (prop === 'homeSidebar') {
-              queries[queryDef.target].push(QUERY_DEFS['homeLink'].query);
+              if (prop === 'homeLink') {
+                queries[queryDef.target].push(hide(QUERY_DEFS['homeSidebar']).query);
+              } else if (prop === 'toolbar') {
+                queries[queryDef.target].push(hide(QUERY_DEFS['toolbar2']).query);
+                queries[queryDef.target].push(hide(QUERY_DEFS['toolbar3']).query);
+              }
             }
           }
         });
         if (homeItemQueries.length > 0) {
-          queries.ownerDocument.push(QUERY_DEFS.getOptimizedHomeItemsQuery(homeItemQueries));
+          queries.ownerDocument.push(QUERY_DEFS.getOptimizedQuery(homeItemQueries));
         }
         this.sendRequest(REQUESTS.SET_CUSTOMIZATIONS, {queries, hiddenProps, action: 'hide'});
         if (this._propsToShow.toolbar.length > 0 || this._propsToShow.ownerDocument.length > 0) {
@@ -411,20 +424,31 @@
           let query = show(QUERY_DEFS[propName]);
           const targetList = this._propsToShow[query.target];
           if (!this[propName]) {
-            if (targetList.indexOf(query.query) < 0) {
-              targetList.push(query.query);
-            }
-            if (propName === 'homeSidebar') {
-              query = show(QUERY_DEFS['homeLink'])
-              if (targetList.indexOf(query.query) < 0) {
-                targetList.push(query.query);
+            if (targetList.indexOf(query) < 0) {
+              targetList.push(query);
+            } if (propName == 'homeLink') {
+              query = show(QUERY_DEFS['homeSidebar'])
+              if (targetList.indexOf(query) < 0) {
+                targetList.push(query);
+              }
+            } else if (propName == 'toolbar') {
+              query = show(QUERY_DEFS['toolbar2']);
+              let query2 = show(QUERY_DEFS['toolbar3']);
+              if (targetList.indexOf(query) < 0) {
+                targetList.push(query);
+              }
+              if (targetList.indexOf(query2) < 0) {
+                targetList.push(query2);
               }
             }
           } else {
-              targetList.splice(targetList.indexOf(query.query), 1);
-              if (propName === 'homeSidebar') {
-                targetList.splice(targetList.indexOf(show(QUERY_DEFS['homeLink']).query), 1);
-              }
+            targetList.splice(targetList.indexOf(query), 1);
+            if (propName == 'homeLink') {
+              targetList.splice(targetList.indexOf(show(QUERY_DEFS['homeSidebar'])), 1);
+            } else if (propName == 'toolbar') {
+              targetList.splice(targetList.indexOf(show(QUERY_DEFS['toolbar2'])), 1);
+              targetList.splice(targetList.indexOf(show(QUERY_DEFS['toolbar3'])), 1);
+            }
           }
         }
       },

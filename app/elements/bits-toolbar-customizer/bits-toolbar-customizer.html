@@ -77,11 +77,23 @@
         if (!this._toolbar) {
           this._toolbar = this._findToolbar(parentElement);
         }
+        // this._toolbar.style.display = 'none';
+        // let parent = this._toolbar.parentElement;
+        // parent.style.display='none';
+        // parent.parentElement.resetLayout();
+        // console.log(`parent element ${parent.tagName}`);
+        // console.log(`grandparent element ${parent.parentNode.tagName}`);
+        // return;
         if (this._queries && this._queries.toolbar) {
           this._queries.toolbar.forEach( (query) => {
             this._deepSearch(this._toolbar, [query],
               (setter) => {
-                setter.baseObj[setter.node] = setter.value;
+                if ('value' in setter) {
+                  setter.baseObj[setter.node] = setter.value;
+                } else if ('call' in setter && setter.call in setter.baseObj) {
+                  const args = setter.args ? null : {...setter.args};
+                  setter.baseObj[setter.call]();
+                }
               }
             );
           });
@@ -94,11 +106,21 @@
                 subQueries.forEach( (search) => {
                   this._deepSearch(node, [[search]],
                   (setter) => {
-                    setter.baseObj[setter.node] = setter.value;
+                    if ('value' in setter) {
+                      setter.baseObj[setter.node] = setter.value;
+                    } else if ('call' in setter && setter.call in setter.baseObj) {
+                    const args = setter.args ? null : {...setter.args};
+                    setter.baseObj[setter.call]();
+                    }
                   });
                 });
               } else {
-                setter.baseObj[setter.node] = setter.value;
+                if ('value' in setter) {
+                  setter.baseObj[setter.node] = setter.value;
+                } else if ('call' in setter && setter.call in setter.baseObj) {
+                  const args = setter.args ? null : {...setter.args};
+                  setter.baseObj[setter.call]();
+                }
               }
             }
           );
@@ -128,7 +150,7 @@
           if (this._match(parent, query, setter, subQueries)) {
             cb(setter.setter, subQueries.items, parent);
             if (++this.matches >= query.length) {
-              throw BreakException;
+              // throw BreakException;
             }
           }
           parent.childNodes.forEach( (node) => {
@@ -137,7 +159,7 @@
             if (this._match(node, query, setter, subQueries)) {
               cb(setter.setter, subQueries.items, node)
               if (++this.matches >= query.length) {
-                throw BreakException;
+                // throw BreakException;
               }
             } else {
               this._deepSearch(node, query, cb);
@@ -150,7 +172,7 @@
               if (this._match(node, query, setter, subQueries)) {
                 cb(setter.setter, subQueries.items, node);
                 if (++this.matches >= query.length) {
-                  throw BreakException;
+                  // throw BreakException;
                 }
               } else {
                 this._deepSearch(node, query, cb);
@@ -166,6 +188,7 @@
 
       _match(node, query, setter, subQueries) {
         let found;
+        setter.setter = {};
         try {
           query.forEach( (q) => {
             found = true;
@@ -180,16 +203,24 @@
                     node: search.setter ? search.setter.node : 'display',
                     value: search.setter ? search.setter.value : 'none',
                   };
+                  if (search.setter && search.setter.call) {
+                    setter.setter.call = search.setter.call;
+                    if (search.setter.args) {
+                      setter.setter.args = search.setter.args;
+                    }
+                    delete setter.setter.value
+                  }
                   if (search.subquery) {
                     subQueries.items = search.subquery;
                   }
                 }
               } catch (e) {
+                // console.log(`EXCEPTION ${e}`)
                 found = false;
               }
             });
             if (found) {
-              throw BreakException;
+              // throw BreakException;
             }
           });
         } catch (e) {
