@@ -128,7 +128,7 @@
           if (this._match(parent, query, setter, subQueries)) {
             cb(setter.setter, subQueries.items, parent);
             if (++this.matches >= query.length) {
-              throw BreakException;
+              // throw BreakException;
             }
           }
           parent.childNodes.forEach( (node) => {
@@ -137,7 +137,7 @@
             if (this._match(node, query, setter, subQueries)) {
               cb(setter.setter, subQueries.items, node)
               if (++this.matches >= query.length) {
-                throw BreakException;
+                // throw BreakException;
               }
             } else {
               this._deepSearch(node, query, cb);
@@ -150,8 +150,9 @@
               if (this._match(node, query, setter, subQueries)) {
                 cb(setter.setter, subQueries.items, node);
                 if (++this.matches >= query.length) {
-                  throw BreakException;
+                  // throw BreakException;
                 }
+              //TODO should not be conditional?
               } else {
                 this._deepSearch(node, query, cb);
               }
@@ -167,8 +168,9 @@
       _match(node, query, setter, subQueries) {
         let found;
         try {
-          query.forEach( (q) => {
+          query.forEach( (_query) => {
             found = true;
+            let q = _query.query;
             q.forEach( (search) => {
               try {
                 let obj = this._getNestedObject(node, search.key);
@@ -176,12 +178,12 @@
                     found = false;
                 } else {
                   setter.setter = {
-                    baseObj: this._getNestedObject(node, search.setter ? search.setter.path : 'style'),
-                    node: search.setter ? search.setter.node : 'display',
-                    value: search.setter ? search.setter.value : 'none',
+                    baseObj: this._getNestedObject(node, q.setter ? q.setter.path : 'style'),
+                    node: q.setter ? q.setter.node : 'display',
+                    value: q.setter ? q.setter.value : 'none',
                   };
                   if (search.subquery) {
-                    subQueries.items = search.subquery;
+                    subQueries.items = search.subquery.query;
                   }
                 }
               } catch (e) {

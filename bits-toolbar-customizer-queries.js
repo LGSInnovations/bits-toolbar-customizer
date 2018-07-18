@@ -166,25 +166,14 @@
     // The Home link in the sidebar. Defined in base-gallery.html.
     homeLink: {
       query: [
-        {
-          key: 'textContent',
-          value: 'Home',
-          setter: {
-            path: 'parentNode.parentNode.host.style',
-            node: 'display',
-            value: 'none'
-          }
-        },
-        {
-          key: 'parentNode.parentNode.host.tagName',
-          value: 'base-gallery-category',
-          setter: {
-            path: 'parentNode.parentNode.host.style',
-            node: 'display',
-            value: 'none'
-          }
-        }
+        {key: 'textContent', value: 'Home'},
+        {key: 'parentNode.parentNode.host.tagName', value: 'base-gallery-category'}
       ],
+      setter: {
+        path: 'parentNode.parentNode.host.style',
+        node: 'display',
+        value: 'none'
+      },
       target: 'ownerDocument'
     },
 
@@ -194,7 +183,9 @@
 
        If more than one of these queries is used, a single query will be made with base-home
        as the initial query and the home items combined into an array and specified as a
-       collection of sub-queries. Each sub-query must contain exactly one search criteria array.
+       collection of sub-queries. Each sub-query must contain exactly one query object and
+       zero or one setter objects. The main query and subquery.query arrays must contain
+       exactly one search object.
 
        NB: This is currently not working properly. The hidden items will still appear
        after clicking the "Home" link in the gallery, but will be hidden if you refresh the page.
@@ -203,17 +194,16 @@
     dashboard: {
       query: [
         {key: 'tagName', value: 'base-home',
-          subquery: [
-            {
-              key: 'textContent',
-              value: 'Dashboard',
-              setter: {
-                path: 'parentNode.style',
-                node: 'display',
-                value: 'none'
-              }
+          subquery: {
+            query: [
+              {key: 'textContent', value: 'Dashboard'}
+            ],
+            setter: {
+              path: 'parentNode.style',
+              node: 'display',
+              value: 'none'
             }
-          ]
+          }
         }
       ],
       target: 'ownerDocument'
@@ -222,17 +212,16 @@
     activity: {
       query: [
         { key: 'tagName', value: 'base-home',
-          subquery: [
-            {
-              key: 'textContent',
-              value: 'Activity',
-              setter: {
-                path: 'parentNode.style',
-                node: 'display',
-                value: 'none'
-              }
+          subquery: {
+            query: [
+              {key: 'textContent', value: 'Activity'}
+            ],
+            setter: {
+              path: 'parentNode.style',
+              node: 'display',
+              value: 'none'
             }
-          ]
+          }
         }
       ],
       target: 'ownerDocument'
@@ -241,17 +230,16 @@
     users: {
       query: [
         { key: 'tagName', value: 'base-home',
-          subquery: [
-            {
-              key: 'textContent',
-              value: 'Users',
-              setter: {
-                path: 'parentNode.style',
-                node: 'display',
-                value: 'none'
-              }
+          subquery: {
+            query: [
+              {key: 'textContent', value: 'Users'}
+            ],
+            setter: {
+              path: 'parentNode.style',
+              node: 'display',
+              value: 'none'
             }
-          ]
+          }
         }
       ],
       target: 'ownerDocument'
@@ -260,17 +248,16 @@
     omgs: {
       query: [
         { key: 'tagName', value: 'base-home',
-          subquery: [
-            {
-              key: 'textContent',
-              value: 'OMGs',
-              setter: {
-                path: 'parentNode.style',
-                node: 'display',
-                value: 'none'
-              }
+          subquery: {
+            query: [
+              {key: 'textContent', value: 'OMGs'}
+            ],
+            setter: {
+              path: 'parentNode.style',
+              node: 'display',
+              value: 'none'
             }
-          ]
+          }
         }
       ],
       target: 'ownerDocument'
@@ -279,17 +266,16 @@
     modules: {
       query: [
         { key: 'tagName', value: 'base-home',
-          subquery: [
-            {
-              key: 'textContent',
-              value: 'Modules',
-              setter: {
-                path: 'parentNode.style',
-                node: 'display',
-                value: 'none'
-              }
+          subquery: {
+            query: [
+              {key: 'textContent', value: 'Modules'}
+            ],
+            setter: {
+              path: 'parentNode.style',
+              node: 'display',
+              value: 'none'
             }
-          ]
+          }
         }
       ],
       target: 'ownerDocument'
@@ -298,17 +284,16 @@
     logs: {
       query: [
         { key: 'tagName', value: 'base-home',
-          subquery: [
-            {
-              key: 'textContent',
-              value: 'Logs',
-              setter: {
-                path: 'parentNode.style',
-                node: 'display',
-                value: 'none'
-              }
+          subquery: {
+            query: [
+              {key: 'textContent', value: 'Logs'}
+            ],
+            setter: {
+              path: 'parentNode.style',
+              node: 'display',
+              value: 'none'
             }
-          ]
+          }
         }
       ],
       target: 'ownerDocument'
@@ -320,10 +305,13 @@
     * be hidden. This function combines them into a single query with <base-home>
     * as the target and an array of subqueries for the items to be hidden.
     */
+
+    //TODO modify to permit more than one search object per query and subquery, if needed
     getOptimizedHomeItemsQuery: function(queries) {
       const query = queries.shift();
       return queries.reduce( (accum, val, idx, arr) => {
-          accum[0].subquery.push(val[0].subquery[0]);
+          accum[0].subquery.query.push(val[0].subquery.query[0]);
+          accum[0].subquery.setter = val[0].subquery.setter;
           return accum;
       }, query);
     }
@@ -346,23 +334,29 @@
   */
   const cloneSearch = function(search) {
     const search_copy = {key: search.key, value: search.value};
-    if ('setter' in search) {
-      search_copy.setter = Object.assign({}, search.setter);
-    }
     if (search.subquery) {
-      search_copy.subquery = [];
-      search.subquery.forEach( (_search) => {
-        search_copy.subquery.push(cloneSearch(_search))
+      search_copy.subquery = {};
+      search_copy.subquery.query = [];
+      search.subquery.query.forEach( (_search) => {
+        search_copy.subquery.query.push(cloneSearch(_search))
       });
+      if (search.subquery.setter) {
+        search_copy.subquery.setter = Object.assign({}, search.subquery.setter);
+      }
     }
     return search_copy
   }
 
   const cloneQuery = function(query) {
+    // console.log(`Before clone ${JSON.stringify(query, null, 2)}`);
     const query_copy = {query: [], target: query.target};
     query.query.forEach( (search) => {
       query_copy.query.push(cloneSearch(search));
     });
+    if (query.setter) {
+      query_copy.setter = Object.assign({}, query.setter);
+    }
+    // console.log(`After clone ${JSON.stringify(query_copy, null, 2)}`);
     return query_copy;
   }
 
@@ -371,25 +365,25 @@
   * enable us to immediately un-hide an item without refreshing the page.
   */
   const show = function(query) {
+    console.log(`show input query ${JSON.stringify(query, null, 2)}`);
     query = cloneQuery(query);
-    query.query.forEach( (_query) => {
-      if ('setter' in _query) {
-        if (_query.setter.node === 'display') {
-          _query.setter.value = 'inline';
-        }
-      } else {
-        _query.setter = {path: 'style', node: 'display', value: 'inline'}
+    if ('setter' in query) {
+      if (query.setter.node === 'display') {
+        query.setter.value = 'inline';
       }
+    } else {
+      query.setter = {path: 'style', node: 'display', value: 'inline'}
+    }
+    query.query.forEach( (_query) => {
       if (_query.subquery) {
-        _query.subquery.forEach( (_subquery) => {
-          if ('setter' in _subquery) {
-            if (_subquery.setter.node === 'display') {
-              _subquery.setter.value = "inline";
-            }
+        if ('setter' in _query.subquery) {
+          if (_query.subquery.setter.node === 'display') {
+            _query.subquery.setter.value = "inline";
           }
-        });
+        }
       }
     });
+    console.log(`show returned query ${JSON.stringify(query, null, 2)}`);
     return query;
   }
 
@@ -398,20 +392,18 @@
   */
   const hide = function(query) {
     query = cloneQuery(query);
-    query.query.forEach( (_query) => {
-      if ('setter' in _query && _query.setter != null) {
-        if (_query.setter.node === 'display') {
-          _query.setter.value = 'none';
-        }
+    if ('setter' in query && query.query.setter != null) {
+      if (query.query.setter.node === 'display') {
+        query.query.setter.value = 'none';
       }
+    }
+    query.query.forEach( (_query) => {
       if (_query.subquery) {
-        _query.subquery.forEach( (_subquery) => {
-          if ('setter' in _subquery.setter) {
-            if (_subquery.setter.node === 'display') {
-              _subquery.setter.value = 'none';
-            }
+        if ('setter' in _query.subquery) {
+          if (_query.subquery.setter.node === 'display') {
+            _query.subquery.setter.value = 'none';
           }
-        });
+        }
       }
     });
     return query;
