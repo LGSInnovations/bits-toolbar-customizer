@@ -82,6 +82,15 @@
             this._deepSearch(this._toolbar, [query],
               (setter) => {
                 setter.baseObj[setter.node] = setter.value;
+                if (setter.extra) {
+                  if (setter.extra.setter) {
+                    setter.extra.setter.baseObj[setter.extra.setter.node] = setter.extra.setter.value;
+                  }
+                  if (setter.extra.call) {
+                    const obj = this.getNestedObject(node, setter.extra.call.path);
+                    obj[setter.extra.call.func]();
+                  }
+                }
               }
             );
           });
@@ -95,10 +104,28 @@
                   this._deepSearch(node, [[search]],
                   (setter) => {
                     setter.baseObj[setter.node] = setter.value;
+                    if (setter.extra) {
+                      if (setter.extra.setter) {
+                        setter.extra.setter.baseObj[setter.extra.setter.node] = setter.extra.setter.value;
+                      }
+                      if (setter.extra.call) {
+                        const obj = this.getNestedObject(node, setter.extra.call.path);
+                        obj[setter.extra.call.func]();
+                      }
+                    }
                   });
                 });
               } else {
                 setter.baseObj[setter.node] = setter.value;
+                if (setter.extra) {
+                  if (setter.extra.setter) {
+                    setter.extra.setter.baseObj[setter.extra.setter.node] = setter.extra.setter.value;
+                  }
+                  if (setter.extra.call) {
+                    const obj = this.getNestedObject(node, setter.extra.call.path);
+                    obj[setter.extra.call.func]();
+                  }
+                }
               }
             }
           );
@@ -180,6 +207,9 @@
                     node: search.setter ? search.setter.node : 'display',
                     value: search.setter ? search.setter.value : 'none',
                   };
+                  if (search.extra) {
+                    setter.setter.extra = search.extra;
+                  }
                   if (search.subquery) {
                     subQueries.items = search.subquery;
                   }

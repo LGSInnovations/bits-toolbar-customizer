@@ -100,7 +100,22 @@
   *     target: 'ownerDocument'
   *   }
   */
+
+  const toolbarExtra = {
+    setter: {path: 'parentNode.style', node: 'display', value: 'none'},
+      call: {path: 'parentElement.parentElement', func: 'resetLayout'}
+    };
+
   const QUERIES = {
+    // Entire toolbar
+    toolbar: {
+
+      query: [
+          { key: 'id', value: 'toolbar', setter: {path: 'style', node: 'display', value: 'none'}, extra: toolbarExtra},
+          { key: 'tagName', value: 'base-toolbar', setter: {path: 'style', node: 'display', value: 'none'}, extra: toolbarExtra}
+      ],
+      target: 'ownerDocument'
+    },
     // Stack icon on left side of toolbar, defined in base-toolbar.html
     gallery: {
       query: [

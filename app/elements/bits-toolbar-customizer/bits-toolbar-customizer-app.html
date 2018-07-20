@@ -131,24 +131,29 @@
     <paper-toast vertical-align="bottom" vertical-offset=80 id="toast" text="Refresh the page to show items no longer being hidden" duration="5000"></paper-toast>
 
   <div class="layout vertical container">
+    <div class="layout horizontal start-justified">
+      <paper-checkbox class="spacer" checked={{toolbar::change}} on-tap="_selectProp">
+        <span id='toolbar' class="title">Hide the BITS Toolbar</span>
+      </paper-checkbox>
+    </div>
     <label class="section-header">Hide the following toolbar items</label>
 
     <div class="layout horizontal start-justified">
-      <paper-checkbox class="spacer" checked={{gallery::change}} on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{gallery::change}} disabled=[[toolbar]] on-tap="_selectProp">
         <span id='gallery' class="title">GALLERY</span>
         <span id='gallery' class="subtitle">
           Button to open the sidebar (stack icon)
         </span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{logo::change}} on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{logo::change}} disabled=[[toolbar]] on-tap="_selectProp">
         <span id='logo' class="title">BITS LOGO</span>
         <span id='logo' class="subtitle">
           BITS Logo (Rendered as "BITS" or stack icon)
         </span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{powerMenu::change}} on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{powerMenu::change}} disabled=[[toolbar]] on-tap="_selectProp">
         <span id='powerMenu' class="title">POWER MENU</span>
         <span id='powerMenu' class="subtitle">
           Menu with system controls
@@ -158,21 +163,21 @@
 
     <label class="section-header" disabled$=[[powerMenu]]>Hide the following power menu items</label>
     <div class="layout horizontal start-justified">
-      <paper-checkbox class="spacer" checked={{powerOff::change}} disabled=[[powerMenu]] on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{powerOff::change}} disabled="[[_disablePowerMenuItems(toolbar, powerMenu)]]" on-tap="_selectProp">
         <span id='powerOff' class="title">POWER OFF</span>
         <span id='powerOff' class="subtitle">
           Power off server host
         </span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{reboot::change}} disabled=[[powerMenu]] on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{reboot::change}} disabled="[[_disablePowerMenuItems(toolbar, powerMenu)]]" on-tap="_selectProp">
         <span id='reboot' class="title">REBOOT</span>
         <span id='reboot' class="subtitle">
           Reboot server host
         </span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{signOut::change}} disabled=[[powerMenu]] on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{signOut::change}} disabled="[[_disablePowerMenuItems(toolbar, powerMenu)]]" on-tap="_selectProp">
         <span id='signOut' class="title">SIGN OUT</span>
         <span id='signOut' class="subtitle">
           Sign out of BITS
@@ -254,6 +259,12 @@
       behaviors: [global.Bits.BaseMessageCenterBehavior],
 
       properties: {
+        toolbar: {
+          type: Boolean,
+          notify: true,
+          value: false,
+          observer: '_onPropChanged'
+        },
         gallery: {
           type: Boolean,
           notify: true,
@@ -267,6 +278,7 @@
         powerMenu: {
           type: Boolean,
           notify: true,
+          value: false,
           observer: '_onPropChanged'
         },
         powerOff: {
@@ -325,7 +337,7 @@
         },
         propChanged: {
           type: Number,
-          value: 1,
+          value: 0,
           notify: true
         },
         savePending: {
@@ -334,6 +346,10 @@
           notify: true,
           value: true
         }
+      },
+
+      _disablePowerMenuItems(toolbar, powerMenu) {
+        return toolbar || powerMenu;
       },
 
       ready: function() {
@@ -399,6 +415,7 @@
       * property notifier will fire.
       */
       _onPropChanged(prop) {
+        this.propChanged = this.propChanged || 0;
         this.propChanged = 1 - this.propChanged;
       },
 
