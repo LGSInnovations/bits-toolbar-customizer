@@ -25,6 +25,7 @@
     }
 
     setCustomizations(data) {
+      console.log(JSON.stringify(data, null, 2))
       this._messageCenter.sendEvent(EVENTS.UPDATE_CUSTOMIZATIONS, SCOPES, data);
       // Send "show" and "hide" queries to client, but only persist "hide" queries
       if (data.action === 'hide') {

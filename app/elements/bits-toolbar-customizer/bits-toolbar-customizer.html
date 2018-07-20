@@ -40,6 +40,24 @@
 
     const EVENTS = TOOLBAR_CUSTOMIZER.EVENTS;
 
+    const getNestedObject = function(object, path) {
+      return path.split('.').reduce( (accum, value) => accum[value], object);
+    };
+
+    const handleSetter = function(node, setter) {
+      setter.setter.baseObj[setter.setter.node] = setter.setter.value;
+      if (setter.extra) {
+        if (setter.extra.call) {
+          const obj = getNestedObject(node, setter.extra.call.path);
+          obj[setter.extra.call.func]();
+        }
+        if (setter.extra.setter) {
+          const obj = getNestedObject(node, setter.extra.setter.path);
+          obj[setter.extra.setter.node] = setter.extra.setter.value;
+        }
+      }
+    };
+
     Polymer({
 
       is: 'bits-toolbar-customizer',
@@ -73,38 +91,6 @@
         this.addSocketEventListener(EVENTS.UPDATE_CUSTOMIZATIONS, this._onUpdateCustomizations.bind(this));
       },
 
-      _setCustomizations(parentElement) {
-        if (!this._toolbar) {
-          this._toolbar = this._findToolbar(parentElement);
-        }
-        if (this._queries && this._queries.toolbar) {
-          this._queries.toolbar.forEach( (query) => {
-            this._deepSearch(this._toolbar, [query],
-              (setter) => {
-                setter.baseObj[setter.node] = setter.value;
-              }
-            );
-          });
-
-        }
-        if (this._queries && this._queries.ownerDocument) {
-          this._deepSearch(this.ownerDocument, this._queries.ownerDocument,
-            (setter, subQueries, node) => {
-              if (subQueries) {
-                subQueries.forEach( (search) => {
-                  this._deepSearch(node, [[search]],
-                  (setter) => {
-                    setter.baseObj[setter.node] = setter.value;
-                  });
-                });
-              } else {
-                setter.baseObj[setter.node] = setter.value;
-              }
-            }
-          );
-        }
-      },
-
       _findToolbar(parent) {
         while(parent !== null && String(parent.localName).toLowerCase() !== 'base-toolbar') {
           if(parent.parentElement === null) {
@@ -120,13 +106,51 @@
         return parent;
       },
 
+      _setCustomizations(parentElement) {
+        if (!this._toolbar) {
+          this._toolbar = this._findToolbar(parentElement);
+        }
+        if (this._queries && this._queries.toolbar) {
+          this._queries.toolbar.forEach( (wrapper) => {
+            let query = {query: wrapper.query, setter: wrapper.setter, extra: wrapper.extra};
+            this._deepSearch(this._toolbar, query,
+              (setter) => {
+                handleSetter(this._toolbar, setter);
+              }
+            );
+          });
+
+        }
+        if (this._queries && this._queries.ownerDocument) {
+          this._queries.ownerDocument.forEach( (wrapper) => {
+            let query = {query: wrapper.query, setter: wrapper.setter, extra: wrapper.extra};
+            this._deepSearch(this.ownerDocument, query,
+              (setter, subQueries, node) => {
+                if (subQueries) {
+                  subQueries.query.forEach( (search) => {
+                    let query = {query: [search], setter: subQueries.setter};
+                    this._deepSearch(node, query,
+                      (setter) => {
+                        handleSetter(node, setter);
+                    });
+                  });
+                } else {
+                  setter.setter.baseObj[setter.setter.node] = setter.setter.value;
+                  handleSetter(node, setter);
+                }
+              }
+            );
+          });
+        }
+      },
+
       _deepSearch(parent, query, cb) {
         try {
           this.count++;
           let setter = {};
           let subQueries = {};
           if (this._match(parent, query, setter, subQueries)) {
-            cb(setter.setter, subQueries.items, parent);
+            cb(setter, subQueries.items, parent);
             if (++this.matches >= query.length) {
               throw BreakException;
             }
@@ -135,7 +159,7 @@
             let setter = {};
             let subQueries = {};
             if (this._match(node, query, setter, subQueries)) {
-              cb(setter.setter, subQueries.items, node)
+              cb(setter, subQueries.items, node)
               if (++this.matches >= query.length) {
                 throw BreakException;
               }
@@ -148,7 +172,7 @@
               let setter = {};
               let subQueries = {};
               if (this._match(node, query, setter, subQueries)) {
-                cb(setter.setter, subQueries.items, node);
+                cb(setter, subQueries.items, node);
                 if (++this.matches >= query.length) {
                   throw BreakException;
                 }
@@ -165,41 +189,37 @@
       },
 
       _match(node, query, setter, subQueries) {
-        let found;
+        let found = true;
+        if (query.extra) {
+          setter.extra = query.extra;
+        }
         try {
-          query.forEach( (q) => {
-            found = true;
-            q.forEach( (search) => {
-              try {
-                let obj = this._getNestedObject(node, search.key);
-                if (typeof obj != 'string' || obj.length == 0 || obj.toLowerCase() !== String(search.value).toLowerCase()) {
-                    found = false;
-                } else {
-                  setter.setter = {
-                    baseObj: this._getNestedObject(node, search.setter ? search.setter.path : 'style'),
-                    node: search.setter ? search.setter.node : 'display',
-                    value: search.setter ? search.setter.value : 'none',
-                  };
-                  if (search.subquery) {
-                    subQueries.items = search.subquery;
-                  }
+          query.query.forEach( (search) => {
+            try {
+              let obj = getNestedObject(node, search.key);
+              if (typeof obj != 'string' || obj.length == 0 || obj.toLowerCase() !== String(search.value).toLowerCase()) {
+                  found = false;
+              } else {
+                setter.setter = {
+                  baseObj: getNestedObject(node, query.setter ? query.setter.path : 'style'),
+                  node: query.setter ? query.setter.node : 'display',
+                  value: query.setter ? query.setter.value : 'none',
+                };
+                if (search.subquery) {
+                  subQueries.items = search.subquery;
                 }
-              } catch (e) {
-                found = false;
               }
-            });
-            if (found) {
-              throw BreakException;
+            } catch (e) {
+              found = false;
             }
           });
+          if (found) {
+            throw BreakException;
+          }
         } catch (e) {
           // PASS
         }
         return found;
-      },
-
-      _getNestedObject (object, path) {
-        return path.split('.').reduce( (accum, value) => accum[value], object);
       },
 
       _onUpdateCustomizations(data) {
