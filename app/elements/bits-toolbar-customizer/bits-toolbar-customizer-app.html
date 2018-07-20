@@ -375,12 +375,12 @@
             hiddenProps.push(prop);
             const queryDef = hide(QUERY_DEFS[prop]);
             if (['activity', 'dashboard', 'users', 'omgs', 'modules', 'logs'].indexOf(prop) >= 0) {
-              homeItemQueries.push(queryDef.query);
+              homeItemQueries.push(queryDef);
             } else {
-              queries[queryDef.target].push(queryDef.query);
+              queries[queryDef.target].push(queryDef);
             }
             if (prop === 'homeSidebar') {
-              queries[queryDef.target].push(QUERY_DEFS['homeLink'].query);
+              queries[queryDef.target].push(QUERY_DEFS['homeLink']);
             }
           }
         });
@@ -429,19 +429,19 @@
           let query = show(QUERY_DEFS[propName]);
           const targetList = this._propsToShow[query.target];
           if (!this[propName]) {
-            if (targetList.indexOf(query.query) < 0) {
-              targetList.push(query.query);
+            if (targetList.indexOf(query) < 0) {
+              targetList.push(query);
             }
             if (propName === 'homeSidebar') {
               query = show(QUERY_DEFS['homeLink'])
-              if (targetList.indexOf(query.query) < 0) {
-                targetList.push(query.query);
+              if (targetList.indexOf(query) < 0) {
+                targetList.push(query);
               }
             }
           } else {
-              targetList.splice(targetList.indexOf(query.query), 1);
+              targetList.splice(targetList.indexOf(query), 1);
               if (propName === 'homeSidebar') {
-                targetList.splice(targetList.indexOf(show(QUERY_DEFS['homeLink']).query), 1);
+                targetList.splice(targetList.indexOf(show(QUERY_DEFS['homeLink'])), 1);
               }
           }
         }
