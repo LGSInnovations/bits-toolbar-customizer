@@ -84,10 +84,11 @@
                 setter.baseObj[setter.node] = setter.value;
                 if (setter.extra) {
                   if (setter.extra.setter) {
-                    setter.extra.setter.baseObj[setter.extra.setter.node] = setter.extra.setter.value;
+                    const obj = this._getNestedObject(node, setter.extra.setter.path);
+                    obj[setter.extra.setter.node] = setter.extra.setter.value;
                   }
                   if (setter.extra.call) {
-                    const obj = this.getNestedObject(node, setter.extra.call.path);
+                    const obj = this._getNestedObject(node, setter.extra.call.path);
                     obj[setter.extra.call.func]();
                   }
                 }
@@ -106,10 +107,11 @@
                     setter.baseObj[setter.node] = setter.value;
                     if (setter.extra) {
                       if (setter.extra.setter) {
-                        setter.extra.setter.baseObj[setter.extra.setter.node] = setter.extra.setter.value;
+                        const obj = this._getNestedObject(node, setter.extra.setter.path);
+                        obj[setter.extra.setter.node] = setter.extra.setter.value;
                       }
                       if (setter.extra.call) {
-                        const obj = this.getNestedObject(node, setter.extra.call.path);
+                        const obj = this._getNestedObject(node, setter.extra.call.path);
                         obj[setter.extra.call.func]();
                       }
                     }
@@ -119,10 +121,11 @@
                 setter.baseObj[setter.node] = setter.value;
                 if (setter.extra) {
                   if (setter.extra.setter) {
-                    setter.extra.setter.baseObj[setter.extra.setter.node] = setter.extra.setter.value;
+                    const obj = this._getNestedObject(node, setter.extra.setter.path);
+                    obj[setter.extra.setter.node] = setter.extra.setter.value;
                   }
                   if (setter.extra.call) {
-                    const obj = this.getNestedObject(node, setter.extra.call.path);
+                    const obj = this._getNestedObject(node, setter.extra.call.path);
                     obj[setter.extra.call.func]();
                   }
                 }

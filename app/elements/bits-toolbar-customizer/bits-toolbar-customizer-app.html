@@ -17,7 +17,8 @@
       :host {
         display: block;
         width: 100vw;
-        overflow-x: auto;
+        height: 100%;
+        overflow: auto;
       }
 
       .button-container {
@@ -197,7 +198,7 @@
 
     <label class="section-header" disabled$=[[homeSidebar]]>Hide the following Home Sidebar items</label>
     <div class="layout horizontal start-justified">
-      <paper-checkbox class="spacer" checked={{dashboard::change}} disabled=[[homeSidebar]] >
+      <paper-checkbox class="spacer" checked={{dashboard::change}} disabled=[[homeSidebar]] on-tap="_selectProp" >
         <span on-tap="_selectProp" id="dashboard" class="title">Dashboard</span>
       </paper-checkbox>
 
@@ -373,7 +374,7 @@
           if (hidableProp(prop) && typeof this[prop] != 'undefined' && this[prop]) {
             hiddenProps.push(prop);
             const queryDef = hide(QUERY_DEFS[prop]);
-            if (queryDef.target == 'ownerDocument' && !prop.startsWith('home')) {
+            if (['activity', 'dashboard', 'users', 'omgs', 'modules', 'logs'].indexOf(prop) >= 0) {
               homeItemQueries.push(queryDef.query);
             } else {
               queries[queryDef.target].push(queryDef.query);

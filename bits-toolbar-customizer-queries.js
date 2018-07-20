@@ -370,6 +370,15 @@
         search_copy.subquery.push(cloneSearch(_search))
       });
     }
+    if (search.extra) {
+      search_copy.extra = {};
+      if (search.extra.setter) {
+        search_copy.extra.setter = Object.assign({}, search.extra.setter);
+      }
+      if (search.extra.call) {
+        search_copy.extra.call = Object.assign({}, search.extra.call);
+      }
+    }
     return search_copy
   }
 
@@ -395,6 +404,15 @@
       } else {
         _query.setter = {path: 'style', node: 'display', value: 'inline'}
       }
+      if ('extra' in _query) {
+        if (_query.extra.setter) {
+          if (_query.extra.setter.node == 'display') {
+            _query.extra.setter.value = 'inline';
+          }
+        } else {
+          _query.extra.setter = {path: 'style', node: 'display', value: 'inline'};
+        }
+      }
       if (_query.subquery) {
         _query.subquery.forEach( (_subquery) => {
           if ('setter' in _subquery) {
@@ -417,6 +435,13 @@
       if ('setter' in _query && _query.setter != null) {
         if (_query.setter.node === 'display') {
           _query.setter.value = 'none';
+        }
+      }
+      if ('extra' in _query) {
+        if (_query.extra.setter) {
+          if (_query.extra.setter.node == 'display') {
+            _query.extra.setter.value = 'none';
+          }
         }
       }
       if (_query.subquery) {
