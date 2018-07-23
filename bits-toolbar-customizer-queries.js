@@ -171,16 +171,8 @@
       target: 'toolbar'
     },
 
-    /* The Home sidebar (displayed at server route /home). Defined in base-home.html. */
-    homeSidebar: {
-      query: [
-        {key: 'tagName', value: 'base-home'}
-      ],
-      target: 'ownerDocument'
-    },
-
     // The Home link in the sidebar. Defined in base-gallery.html.
-    homeLink: {
+    home: {
       query: [
         {key: 'textContent',value: 'Home'},
         {key: 'parentNode.parentNode.host.tagName', value: 'base-gallery-category'}
@@ -188,6 +180,17 @@
       setters: [
         {path: 'parentNode.parentNode.host.style', node: 'display', value: 'none'}
       ],
+      // The Home sidebar (displayed at server route /home). Defined in base-home.html.
+      subquery: {
+        query: [
+            {key: 'tagName', value: 'base-home'}
+        ],
+        setters: [
+          {path: 'style', node: 'display', value: 'none'}
+        ],
+        target: 'ownerDocument',
+        noPreemptMain: true
+      },
       target: 'ownerDocument'
     },
 
@@ -354,6 +357,12 @@
         query.subquery.setters.forEach( (setter) => {
           query_copy.subquery.setters.push(Object.assign({}, setter));
         });
+      }
+      if (query.subquery.target) {
+        query_copy.subquery.target = query.subquery.target;
+      }
+      if (query.subquery.noPreemptMain) {
+        query_copy.subquery.noPreemptMain = query.subquery.noPreemptMain;
       }
     }
     return query_copy;

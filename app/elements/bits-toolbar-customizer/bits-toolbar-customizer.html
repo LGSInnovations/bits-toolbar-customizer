@@ -133,16 +133,20 @@
                 if (query.subquery) {
                   let setters = query.subquery.setters;
                   let callers = query.subquery.callers;
+                  const subqueryTarget = query.subquery.target ? this[query.subquery.target] : node;
                   query.subquery.query.forEach( (search) => {
-                    let query = {query: [search]};
+                    let _query = {query: [search]};
                     if (callers) {
-                      query.callers = callers;
+                      _query.callers = callers;
                     }
-                    this._deepSearch(node, query,
+                    this._deepSearch(subqueryTarget, _query,
                       (node) => {
                         handleSetter(node, setters, callers);
                     });
                   });
+                  if (query.subquery.noPreemptMain) {
+                    handleSetter(node, query.setters, query.callers);
+                  }
                 } else {
                   handleSetter(node, query.setters, query.callers);
                 }
