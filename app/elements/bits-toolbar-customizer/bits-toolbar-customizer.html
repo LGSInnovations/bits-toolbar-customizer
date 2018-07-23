@@ -44,17 +44,22 @@
       return path.split('.').reduce( (accum, value) => accum[value], object);
     };
 
-    const handleSetter = function(node, setter) {
-      setter.setter.baseObj[setter.setter.node] = setter.setter.value;
-      if (setter.extra) {
-        if (setter.extra.call) {
-          const obj = getNestedObject(node, setter.extra.call.path);
-          obj[setter.extra.call.func]();
-        }
-        if (setter.extra.setter) {
-          const obj = getNestedObject(node, setter.extra.setter.path);
-          obj[setter.extra.setter.node] = setter.extra.setter.value;
-        }
+    const handleSetter = function(node, setters, callers) {
+      if (setters) {
+        setters.forEach( (setter) => {
+          const obj = getNestedObject(node, setter.path);
+          obj[setter.node] = setter.value;
+        });
+      } else {
+        const obj = getNestedObject(node, 'style');
+        obj.display = 'none';
+      }
+
+      if (callers) {
+        callers.forEach( (caller) => {
+          const obj = getNestedObject(node, caller.path);
+          obj[caller.func]();
+        });
       }
     };
 
@@ -111,32 +116,35 @@
           this._toolbar = this._findToolbar(parentElement);
         }
         if (this._queries && this._queries.toolbar) {
-          this._queries.toolbar.forEach( (wrapper) => {
-            let query = {query: wrapper.query, setter: wrapper.setter, extra: wrapper.extra};
+          this._queries.toolbar.forEach( (query) => {
             this._deepSearch(this._toolbar, query,
-              (setter) => {
-                handleSetter(this._toolbar, setter);
+              (node) => {
+                handleSetter(node, query.setters, query.callers);
               }
             );
           });
 
         }
+        // Currently we only expect a subquery in ownerDocument queries
         if (this._queries && this._queries.ownerDocument) {
-          this._queries.ownerDocument.forEach( (wrapper) => {
-            let query = {query: wrapper.query, setter: wrapper.setter, extra: wrapper.extra};
+          this._queries.ownerDocument.forEach( (query) => {
             this._deepSearch(this.ownerDocument, query,
-              (setter, subQueries, node) => {
-                if (subQueries) {
-                  subQueries.query.forEach( (search) => {
-                    let query = {query: [search], setter: subQueries.setter};
+              (node) => {
+                if (query.subquery) {
+                  let setters = query.subquery.setters;
+                  let callers = query.subquery.callers;
+                  query.subquery.query.forEach( (search) => {
+                    let query = {query: [search]};
+                    if (callers) {
+                      query.callers = callers;
+                    }
                     this._deepSearch(node, query,
-                      (setter) => {
-                        handleSetter(node, setter);
+                      (node) => {
+                        handleSetter(node, setters, callers);
                     });
                   });
                 } else {
-                  setter.setter.baseObj[setter.setter.node] = setter.setter.value;
-                  handleSetter(node, setter);
+                  handleSetter(node, query.setters, query.callers);
                 }
               }
             );
@@ -147,19 +155,15 @@
       _deepSearch(parent, query, cb) {
         try {
           this.count++;
-          let setter = {};
-          let subQueries = {};
-          if (this._match(parent, query, setter, subQueries)) {
-            cb(setter, subQueries.items, parent);
+          if (this._match(parent, query)) {
+            cb(parent);
             if (++this.matches >= query.length) {
               throw BreakException;
             }
           }
           parent.childNodes.forEach( (node) => {
-            let setter = {};
-            let subQueries = {};
-            if (this._match(node, query, setter, subQueries)) {
-              cb(setter, subQueries.items, node)
+            if (this._match(node, query)) {
+              cb(node)
               if (++this.matches >= query.length) {
                 throw BreakException;
               }
@@ -169,10 +173,8 @@
           });
           if (parent.shadowRoot) {
             parent.shadowRoot.childNodes.forEach( (node) => {
-              let setter = {};
-              let subQueries = {};
-              if (this._match(node, query, setter, subQueries)) {
-                cb(setter, subQueries.items, node);
+              if (this._match(node, query)) {
+                cb(node);
                 if (++this.matches >= query.length) {
                   throw BreakException;
                 }
@@ -188,26 +190,14 @@
         }
       },
 
-      _match(node, query, setter, subQueries) {
+      _match(node, query) {
         let found = true;
-        if (query.extra) {
-          setter.extra = query.extra;
-        }
         try {
           query.query.forEach( (search) => {
             try {
               let obj = getNestedObject(node, search.key);
               if (typeof obj != 'string' || obj.length == 0 || obj.toLowerCase() !== String(search.value).toLowerCase()) {
                   found = false;
-              } else {
-                setter.setter = {
-                  baseObj: getNestedObject(node, query.setter ? query.setter.path : 'style'),
-                  node: query.setter ? query.setter.node : 'display',
-                  value: query.setter ? query.setter.value : 'none',
-                };
-                if (search.subquery) {
-                  subQueries.items = search.subquery;
-                }
               }
             } catch (e) {
               found = false;
