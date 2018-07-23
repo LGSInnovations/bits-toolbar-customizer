@@ -100,12 +100,6 @@
   *     target: 'ownerDocument'
   *   }
   */
-
-  const toolbarExtra = {
-    setter: {path: 'parentNode.style', node: 'display', value: 'none'},
-      call: {path: 'parentElement.parentElement', func: 'resetLayout'}
-    };
-
   const QUERIES = {
     // Entire toolbar
     toolbar: {
@@ -114,8 +108,13 @@
           { key: 'id', value: 'toolbar' },
           { key: 'tagName', value: 'base-toolbar'}
       ],
-      setter: {path: 'style', node: 'display', value: 'none'},
-      extra: toolbarExtra,
+      setters: [
+        {path: 'style', node: 'display', value: 'none'},
+        {path: 'parentNode.style', node: 'display', value: 'none'}
+      ],
+      callers: [
+        {path: 'parentElement.parentElement', func: 'resetLayout'}
+      ],
       target: 'ownerDocument'
     },
     // Stack icon on left side of toolbar, defined in base-toolbar.html
@@ -157,8 +156,8 @@
     // Power menu item defined in 'base-system-power-control.html'
     reboot: {
         query: [
-        {key: 'tagName', value: 'paper-item'},
-        {key: 'textContent', value: 'Reboot'}
+          {key: 'tagName', value: 'paper-item'},
+          {key: 'textContent', value: 'Reboot'}
       ],
       target: 'toolbar'
     },
@@ -172,30 +171,25 @@
       target: 'toolbar'
     },
 
-    /* The Home sidebar (displayed at server route /home). Defined in base-home.html. */
-    homeSidebar: {
-      query: [
-        {key: 'tagName', value: 'base-home'}
-      ],
-      target: 'ownerDocument'
-    },
-
     // The Home link in the sidebar. Defined in base-gallery.html.
-    homeLink: {
+    home: {
       query: [
-        {
-          key: 'textContent',
-          value: 'Home',
-        },
-        {
-          key: 'parentNode.parentNode.host.tagName',
-          value: 'base-gallery-category'
-        }
+        {key: 'textContent',value: 'Home'},
+        {key: 'parentNode.parentNode.host.tagName', value: 'base-gallery-category'}
       ],
-      setter: {
-        path: 'parentNode.parentNode.host.style',
-        node: 'display',
-        value: 'none'
+      setters: [
+        {path: 'parentNode.parentNode.host.style', node: 'display', value: 'none'}
+      ],
+      // The Home sidebar (displayed at server route /home). Defined in base-home.html.
+      subquery: {
+        query: [
+            {key: 'tagName', value: 'base-home'}
+        ],
+        setters: [
+          {path: 'style', node: 'display', value: 'none'}
+        ],
+        target: 'ownerDocument',
+        noPreemptMain: true
       },
       target: 'ownerDocument'
     },
@@ -205,8 +199,11 @@
        sidebar (queries homeSidebar and homeLink). See computeSidebar(user) in base-home.html
 
        If more than one of these queries is used, a single query will be made with base-home
-       as the initial query and the home items combined into an array and specified as a
-       collection of sub-queries. Each sub-query must contain exactly one search object.
+       as the initial query and the home items contained in the array at path
+       query[0].subquery.query. Thus for these individual queries there must be exactly one
+       search object in the query and subquery.query arrays. The queries are combined in
+       function getOptimizedHomeItemsQuery. See line 333 for handling of the carindality
+       explained above.
 
        NB: This is currently not working properly. The hidden items will still appear
        after clicking the "Home" link in the gallery, but will be hidden if you refresh the page.
@@ -214,109 +211,91 @@
 
     dashboard: {
       query: [
-        {key: 'tagName', value: 'base-home',
-          subquery: {
-            query: [
-              {key: 'textContent', value: 'Dashboard'}
-            ],
-            setter: {
-              path: 'parentNode.style',
-              node: 'display',
-              value: 'none'
-            }
-          }
-        }
+        {key: 'tagName', value: 'base-home'}
       ],
+      subquery: {
+        query: [
+          {key: 'textContent', value: 'Dashboard'}
+        ],
+        setters: [
+          {path: 'parentNode.style', node: 'display', value: 'none'}
+        ]
+      },
       target: 'ownerDocument'
     },
 
     activity: {
       query: [
-        {key: 'tagName', value: 'base-home',
-          subquery: {
-            query: [
-              {key: 'textContent', value: 'Activity'}
-            ],
-            setter: {
-              path: 'parentNode.style',
-              node: 'display',
-              value: 'none'
-            }
-          }
-        }
+        {key: 'tagName', value: 'base-home'}
       ],
+      subquery: {
+        query: [
+          {key: 'textContent', value: 'Activity'}
+        ],
+        setters: [
+          {path: 'parentNode.style', node: 'display', value: 'none'}
+        ]
+      },
       target: 'ownerDocument'
     },
 
     users: {
       query: [
-        {key: 'tagName', value: 'base-home',
-          subquery: {
-            query: [
-              {key: 'textContent', value: 'Users'}
-            ],
-            setter: {
-              path: 'parentNode.style',
-              node: 'display',
-              value: 'none'
-            }
-          }
-        }
+        {key: 'tagName', value: 'base-home'}
       ],
+      subquery: {
+        query: [
+          {key: 'textContent', value: 'Users'}
+        ],
+        setters: [
+          {path: 'parentNode.style', node: 'display', value: 'none'}
+        ]
+      },
       target: 'ownerDocument'
     },
 
     omgs: {
       query: [
-        {key: 'tagName', value: 'base-home',
-          subquery: {
-            query: [
-              {key: 'textContent', value: 'OMGs'}
-            ],
-            setter: {
-              path: 'parentNode.style',
-              node: 'display',
-              value: 'none'
-            }
-          }
-        }
+        {key: 'tagName', value: 'base-home'}
       ],
+      subquery: {
+        query: [
+          {key: 'textContent', value: 'OMGs'}
+        ],
+        setters: [
+          {path: 'parentNode.style', node: 'display', value: 'none'}
+        ]
+      },
       target: 'ownerDocument'
     },
 
     modules: {
       query: [
-        {key: 'tagName', value: 'base-home',
-          subquery: {
-            query: [
-              {key: 'textContent', value: 'Modules'}
-            ],
-            setter: {
-              path: 'parentNode.style',
-              node: 'display',
-              value: 'none'
-            }
-          }
-        }
+        {key: 'tagName', value: 'base-home'}
       ],
+      subquery: {
+        query: [
+          {key: 'textContent', value: 'Modules'}
+        ],
+        setters: [
+          {path: 'parentNode.style', node: 'display', value: 'none'}
+        ]
+      },
       target: 'ownerDocument'
     },
 
     logs: {
       query: [
-        {key: 'tagName', value: 'base-home',
-          subquery: {
-            query: [
-              {key: 'textContent', value: 'Logs'}
-            ],
-            setter: {
-              path: 'parentNode.style',
-              node: 'display',
-              value: 'none'
-            }
-          }
-        }
+        {key: 'tagName', value: 'base-home'}
       ],
+      subquery: {
+        query: [
+          {key: 'textContent', value: 'Logs'}
+        ],
+        setters: [
+          {path: 'parentNode.style', node: 'display', value: 'none'}
+        ]
+      },
       target: 'ownerDocument'
     },
 
@@ -329,7 +308,7 @@
     getOptimizedHomeItemsQuery: function(queries) {
       const query = queries.shift();
       return queries.reduce( (accum, val, idx, arr) => {
-          accum.query[0].subquery.query.push(val.query[0].subquery.query[0]);
+          accum.subquery.query.push(val.subquery.query[0]);
           return accum;
       }, query);
     }
@@ -347,39 +326,43 @@
 
   /**
   * The "show" and "hide" wrapper functions mutate the queries to be "show" or
-  * "hide" queries, respectively. Wec lone them to avoid mutating the base instance
+  * "hide" queries, respectively. We clone them to avoid mutating the base instance
   * of each query.
   */
-  const cloneSearch = function(search) {
-    const search_copy = {key: search.key, value: search.value};
-    if (search.subquery) {
-      search_copy.subquery = {};
-      search_copy.subquery.query = [];
-      search.subquery.query.forEach( (_search) => {
-        search_copy.subquery.query.push(cloneSearch(_search))
-      });
-      if (search.subquery.setter) {
-        search_copy.subquery.setter = Object.assign({}, search.subquery.setter);
-      }
-    }
-    return search_copy
-  }
-
   const cloneQuery = function(query) {
     const query_copy = {query: [], target: query.target};
     query.query.forEach( (search) => {
-      query_copy.query.push(cloneSearch(search));
+      query_copy.query.push(Object.assign({}, search));
     });
-    if (query.setter) {
-      query_copy.setter = Object.assign({}, query.setter);
+    if (query.setters) {
+      query_copy.setters = [];
+      query.setters.forEach( (setter) => {
+        query_copy.setters.push(Object.assign({}, setter));
+      });
     }
-    if (query.extra) {
-      query_copy.extra = {};
-      if (query.extra.setter) {
-        query_copy.extra.setter = Object.assign({}, query.extra.setter);
+    if (query.callers) {
+      query_copy.callers = [];
+      query.callers.forEach( (caller) => {
+        query_copy.callers.push(Object.assign({}, caller));
+      });
+    }
+    if (query.subquery) {
+      query_copy.subquery = {};
+      query_copy.subquery.query = [];
+      query.subquery.query.forEach( (search) => {
+        query_copy.subquery.query.push(Object.assign({}, search))
+      });
+      if (query.subquery.setters) {
+        query_copy.subquery.setters = [];
+        query.subquery.setters.forEach( (setter) => {
+          query_copy.subquery.setters.push(Object.assign({}, setter));
+        });
       }
-      if (query.extra.call) {
-        query_copy.extra.call = Object.assign({}, query.extra.call);
+      if (query.subquery.target) {
+        query_copy.subquery.target = query.subquery.target;
+      }
+      if (query.subquery.noPreemptMain) {
+        query_copy.subquery.noPreemptMain = query.subquery.noPreemptMain;
       }
     }
     return query_copy;
@@ -391,32 +374,25 @@
   */
   const show = function(query) {
     query = cloneQuery(query);
-    query.query.forEach( (search) => {
-      if (search.subquery) {
-        search.subquery.query.forEach( (search) => {
-          if (search.setter) {
-            if (search.setter.node === 'display') {
-              search.setter.value = "inline";
-            }
+    if (query.subquery) {
+      if (query.subquery.setters) {
+        query.subquery.setters.forEach( (setter) => {
+          if (setter.node === 'display') {
+            setter.value = "inline";
           }
         });
-      }
-    });
-    if (query.setter) {
-      if (query.setter.node === 'display') {
-        query.setter.value = 'inline';
-      }
-    } else {
-      query.setter = {path: 'style', node: 'display', value: 'inline'}
-    }
-    if (query.extra) {
-      if (query.extra.setter) {
-        if (query.extra.setter.node == 'display') {
-          query.extra.setter.value = 'inline';
-        }
       } else {
-        query.extra.setter = {path: 'style', node: 'display', value: 'inline'};
+        query.subquery.setters = [{path: 'style', node: 'display', value: 'inline'}]
       }
+    }
+    if (query.setters) {
+      query.setters.forEach( (setter) => {
+        if (setter.node === 'display') {
+          setter.value = 'inline';
+        }
+      })
+    } else {
+      query.setters = [{path: 'style', node: 'display', value: 'inline'}];
     }
     return query;
   }
@@ -426,28 +402,21 @@
   */
   const hide = function(query) {
     query = cloneQuery(query);
-    query.query.forEach( (search) => {
-      if (search.subquery) {
-        search.subquery.query.forEach( (search) => {
-          if (search.setter) {
-            if (search.setter.node === 'display') {
-              search.setter.value = "none";
-            }
+    if (query.subquery) {
+      if (query.subquery.setters) {
+        query.subquery.setters.forEach( (setter) => {
+          if (setter.node === 'display') {
+            setter.value = "none";
           }
         });
       }
-    });
-    if (query.setter) {
-      if (query.setter.node === 'display') {
-        query.setter.value = 'none';
-      }
     }
-    if (query.extra) {
-      if (query.extra.setter) {
-        if (query.extra.setter.node == 'display') {
-          query.extra.setter.value = 'none';
+    if (query.setters) {
+      query.setters.forEach( (setter) => {
+        if (setter.node === 'display') {
+          setter.value = 'none';
         }
-      }
+      });
     }
     return query;
   }

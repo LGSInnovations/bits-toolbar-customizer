@@ -188,37 +188,37 @@
 
     <label class="section-header">Hide the following Sidebar item</label>
     <div class="layout horizontal start-justified">
-      <paper-checkbox class="spacer" checked={{homeSidebar::change}} on-tap="_selectProp">
-        <span id='homeSidebar' class="title">HOME</span>
-        <span id='homeSidebar' class="subtitle">
+      <paper-checkbox class="spacer" checked={{home::change}} on-tap="_selectProp">
+        <span id='home' class="title">HOME</span>
+        <span id='home' class="subtitle">
           The /home page route and sidebar link to it
         </span>
       </paper-checkbox>
     </div>
 
-    <label class="section-header" disabled$=[[homeSidebar]]>Hide the following Home Sidebar items</label>
+    <label class="section-header" disabled$=[[home]]>Hide the following Home Sidebar items</label>
     <div class="layout horizontal start-justified">
-      <paper-checkbox class="spacer" checked={{dashboard::change}} disabled=[[homeSidebar]] on-tap="_selectProp" >
+      <paper-checkbox class="spacer" checked={{dashboard::change}} disabled=[[home]] on-tap="_selectProp" >
         <span on-tap="_selectProp" id="dashboard" class="title">Dashboard</span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{activity::change}} disabled=[[homeSidebar]] on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{activity::change}} disabled=[[home]] on-tap="_selectProp">
         <span id='activity' class="title">Activity</span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{users::change}} disabled=[[homeSidebar]] on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{users::change}} disabled=[[home]] on-tap="_selectProp">
         <span id='users' class="title">Users</span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{omgs::change}} disabled=[[homeSidebar]] on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{omgs::change}} disabled=[[home]] on-tap="_selectProp">
         <span id='omgs' class="title">OMGs</span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{modules::change}} disabled=[[homeSidebar]] on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{modules::change}} disabled=[[home]] on-tap="_selectProp">
         <span id='modules' class="title">Modules</span>
       </paper-checkbox>
 
-      <paper-checkbox class="spacer" checked={{logs::change}} disabled=[[homeSidebar]] on-tap="_selectProp">
+      <paper-checkbox class="spacer" checked={{logs::change}} disabled=[[home]] on-tap="_selectProp">
         <span id='logs' class="title">Logs</span>
       </paper-checkbox>
     </div>
@@ -297,7 +297,7 @@
           notify: true,
           observer: '_onPropChanged'
         },
-        homeSidebar: {
+        home: {
           type: Boolean,
           notify: true,
           observer: '_onPropChanged'
@@ -379,9 +379,6 @@
             } else {
               queries[queryDef.target].push(queryDef);
             }
-            if (prop === 'homeSidebar') {
-              queries[queryDef.target].push(QUERY_DEFS['homeLink']);
-            }
           }
         });
         if (homeItemQueries.length > 0) {
@@ -432,17 +429,8 @@
             if (targetList.indexOf(query) < 0) {
               targetList.push(query);
             }
-            if (propName === 'homeSidebar') {
-              query = show(QUERY_DEFS['homeLink'])
-              if (targetList.indexOf(query) < 0) {
-                targetList.push(query);
-              }
-            }
           } else {
               targetList.splice(targetList.indexOf(query), 1);
-              if (propName === 'homeSidebar') {
-                targetList.splice(targetList.indexOf(show(QUERY_DEFS['homeLink'])), 1);
-              }
           }
         }
       },
