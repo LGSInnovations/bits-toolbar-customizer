@@ -9,11 +9,11 @@
         "build": "yarn && npm run lint && npm run test"
     },
     "devDependencies": {
-        "eslint": "^4.4.1",
-        "eslint-plugin-html": "^3.2.0",
+        "chai": "^3.5.0",
+        "eslint": "^5.14.1",
         "eslint-config-google": "^0.9.1",
-        "mocha": "^3.2.0",
-        "chai": "^3.5.0"
+        "eslint-plugin-html": "^3.2.0",
+        "mocha": "^6.0.1"
     },
     "dependencies": {
         "growl": "^1.10.5"
